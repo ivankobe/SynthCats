@@ -5,7 +5,11 @@ open import CaTT
 open import synthetic-categories
 
 module terminal-category where
+```
 
+We postulate the existence of a terminal category.
+
+```agda
 postulate 𝟙 : category
 postulate 𝟙-proj : (A : Ty) → {t* A ≡ 𝟙} → Tm A
 

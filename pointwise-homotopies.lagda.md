@@ -6,21 +6,26 @@ open import whiskering
 open import type-morphisms
 
 module pointwise-homotopies where
+```
 
+A pointwise homotopy Φ between type morphisms φ ψ : A ⇝ B is given by a term Φ a : [ B ] φ a ⇒ ψ a
+for every term a : A. Pointwise homotopies can be composed and we have identity homotopies. 
+
+```agda
 ptw-htpy : {A B : Ty} (φ ψ : morph A B) → Set
 ptw-htpy {A} {B} φ ψ = (α : Tm A) → Tm ([ B ] (morph-base φ) α ⇒ (morph-base ψ) α)
 
-record ptw-htpy' {A B : Ty} (φ ψ : morph A B) : Set
+record lax-nat-trans {A B : Ty} (φ ψ : morph A B) : Set
   where
   coinductive
   field
-    ptw-htpy-base : (α : Tm A) → Tm ([ B ] (morph-base φ) α ⇒ (morph-base ψ) α)
-    ptw-htpy-step : {α α' : Tm A} →
-      ptw-htpy'
-        ( morph-postcomp (morph-step φ) (t*-base _ _) (ptw-htpy-base α'))
-        ( morph-precomp (morph-step ψ) (s*-base _ _) (ptw-htpy-base α))
+    lax-nat-trans-base : (α : Tm A) → Tm ([ B ] (morph-base φ) α ⇒ (morph-base ψ) α)
+    lax-nat-trans-step : {α α' : Tm A} →
+      lax-nat-trans
+        ( morph-postcomp (morph-step φ) (t*-base _ _) (lax-nat-trans-base α'))
+        ( morph-precomp (morph-step ψ) (s*-base _ _) (lax-nat-trans-base α))
 
-open ptw-htpy' public
+open lax-nat-trans public
 
 ptw-htpy-id : {A B : Ty} (φ : morph A B) → ptw-htpy φ φ
 ptw-htpy-id φ a = Id (morph-base φ a)

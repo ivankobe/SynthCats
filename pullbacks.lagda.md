@@ -8,7 +8,11 @@ open import functoriality-of-whiskering
 open import synthetic-categories
 
 module pullbacks where
+```
 
+We postulate the existence of pullbacks.
+
+```agda
 module pullback-cons
   {C D E : category} (f : functor C E) (g : functor D E)
   where

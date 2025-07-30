@@ -6,7 +6,23 @@ open import whiskering
 open import type-morphisms
 open import pointwise-homotopies
 open import synthetic-categories
+```
 
+```agda
+module functoriality-of-whiskering where
+```
+
+The operation of right (left) whiskering is functorial in the following sense.
+- For every type B' with t* B' ≡ D, we have a morphism u_D : id_D ⋆ B' ⇝ B' together with a
+  pointwise homotopy u_D ∘ rw_{id_D} ⇒ id_B'.
+- For every type B' with t* B' ≡ D, where D : B, and terms g : [ B ] D ⇒ E and h : [ B ] E ⇒ F,
+  we have a morphism a_{g,h} : (h ∘ g) ⋆ B' ⇝ h ⋆ (g ⋆ B') together with a pointwise homotopy
+  a_{g,h} ∘ rw_{g∘h} ⇒ rw_h ∘ rw_g.
+- For every type B' with t* B' ≡ D, where D : B, and terms g g' : [ B ] D ⇒ E and a term
+  β : [ [ B ] D ⇒ E ] g ⇒ g', we have a morphism tr_β : g ⋆ B' ⇝ g' ⋆ B' together with a
+  pointwise homotopy tr_β ∘ rw_g ⇒ rw_g'.
+
+```agda
 mutual
 
   morph-r-unit :
