@@ -137,6 +137,14 @@ ret-map (equiv-ret (equiv-inv f)) = equiv-map f
 ret-is-ret (equiv-ret (equiv-inv f)) = equiv-sec-is-sec f
 ```
 
+A section is also a retraction
+
+```agda
+equiv-sec-is-ret : {C D : category} → (f : equiv C D) →
+  nat-iso (comp (equiv-sec-map f) (equiv-map f)) (Id C)
+equiv-sec-is-ret f = equiv-sec-is-sec (equiv-inv f) 
+```
+
 Given a proof p : t* A ≡ C witnessing that dim A > 0 and a term α : A, we obtain a term of type
 [ ∂ₜ A p ] ∂ₜ⁻ A p ⇒ ∂ₜ⁺ A p, and vice versa.
 

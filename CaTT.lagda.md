@@ -11,7 +11,6 @@ toghether with an unspecified presheaf Tm over Ty.
 
 ```agda
 mutual
-
   data Ty : Set where
     ⋆ : Ty
     [_]_⇒_ : (A : Ty) → Tm A → Tm A → Ty

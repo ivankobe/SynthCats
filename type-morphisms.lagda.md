@@ -47,7 +47,6 @@ of a type morphism (dim A' - dim A) times.
 
 ```agda
 mutual
-
   shift-ty : {A B : Ty} (φ : morph A B) → (A' : Ty) → ∂* A' ≡ A → Ty
   shift-ty {B = B} φ _ (∂*-base _) = B
   shift-ty φ ([ A' ] t ⇒ u) (∂*-step t u _ p) =

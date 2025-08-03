@@ -91,7 +91,7 @@ mutual
     Tm ([ _ ]
         snd-prod-comm₁ C A t u ⇒
         r-whisk-tm (pr₁-prod C _) _ (snd-prod-ty-tgt C A t u) (snd-prod-tm C A t u α))
-  snd-prod-iso₁ C A t u α = coh₁-prod _ _
+  snd-prod-iso₁ C A t u α = coh₁-prod (snd-prod-comm₁ C A t u) (snd-prod-comm₂ C A t u α)
 
   snd-prod-iso₂ : (C : category) → (A : Ty) → (t u : Tm A) → (α : Tm ([ A ] t ⇒ u)) →
     Tm ([ _ ]

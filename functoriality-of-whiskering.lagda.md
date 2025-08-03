@@ -30,15 +30,15 @@ mutual
   morph-r-unit {B = B} D ([ _ ] C ⇒ D) (t*-base _ _) = morph-id ([ B ] C ⇒ D)
   morph-r-unit D ([ B' ] t ⇒ u) (t*-step p t u) =
     morph-precomp
-      (morph-postcomp
-        (shift
-          (morph-r-unit D B' p)
-          (r-whisk-ty (Id D) ([ B' ] t ⇒ u) (t*-step p _ _))
-          (∂*-step _ _ _ _))
-        (t*-base _ _)
-        (ptw-htpy-r-unit D B' p u))
-      (s*-base _ _)
-      (Inv (ptw-htpy-r-unit D B' p t))
+      ( morph-postcomp
+        ( shift
+          ( morph-r-unit D B' p)
+          ( r-whisk-ty (Id D) ([ B' ] t ⇒ u) (t*-step p _ _))
+          ( ∂*-step _ _ _ _))
+        ( t*-base _ _)
+        ( ptw-htpy-r-unit D B' p u))
+      ( s*-base _ _)
+      ( Inv (ptw-htpy-r-unit D B' p t))
 
   ptw-htpy-r-unit : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) →
     ptw-htpy (morph-comp (morph-r-unit D B' p) (r-whisk-morph B' p (Id D))) (morph-id B')
