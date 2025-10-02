@@ -1,4 +1,6 @@
 ```agda
+{-# OPTIONS --allow-unsolved-metas #-}
+
 open import CaTT
 open import Agda.Builtin.Equality
 ```
@@ -60,15 +62,15 @@ CaTT, the same pasting context is used in both cases, so no choice has to be mad
 to assume a (propositional) equality between both composites.
 
 ```agda
-comp : {A : Ty} {t u v : Tm A} → Tm ([ A ] u ⇒ v) → Tm ([ A ] t ⇒ u) → Tm ([ A ] t ⇒ v)
-comp {A} {t} {u} g f = r-whisk-tm g ([ A ] t ⇒ u) (t*-base _ _) f
+Comp : {A : Ty} {t u v : Tm A} → Tm ([ A ] u ⇒ v) → Tm ([ A ] t ⇒ u) → Tm ([ A ] t ⇒ v)
+Comp {A} {t} {u} g f = r-whisk-tm g ([ A ] t ⇒ u) (t*-base _ _) f
 
-comp' : {A : Ty} {t u v : Tm A} → Tm ([ A ] u ⇒ v) → Tm ([ A ] t ⇒ u) → Tm ([ A ] t ⇒ v)
-comp' {A} {t} {u} {v} g f = l-whisk-tm f ([ A ] u ⇒ v) (s*-base _ _) g
+Comp' : {A : Ty} {t u v : Tm A} → Tm ([ A ] u ⇒ v) → Tm ([ A ] t ⇒ u) → Tm ([ A ] t ⇒ v)
+Comp' {A} {t} {u} {v} g f = l-whisk-tm f ([ A ] u ⇒ v) (s*-base _ _) g
 
 postulate
-  comp-coh : {A : Ty} {t u v : Tm A} → (g : Tm ([ A ] u ⇒ v)) → (f : Tm ([ A ] t ⇒ u)) →
-    comp g f ≡ comp' g f
+  Comp-coh : {A : Ty} {t u v : Tm A} → (g : Tm ([ A ] u ⇒ v)) → (f : Tm ([ A ] t ⇒ u)) →
+    Comp g f ≡ Comp' g f
 ```
 
 Composition is unital and associative.
@@ -77,14 +79,14 @@ Composition is unital and associative.
 postulate
   left-unit-law :
     {A : Ty} {a b : Tm A} (f : Tm ([ A ] a ⇒ b)) →
-      Tm ([ [ A ] a ⇒ b ] comp (Id b) f ⇒ f) 
+      Tm ([ [ A ] a ⇒ b ] Comp (Id b) f ⇒ f) 
 
 postulate
   right-unit-law :
     {A : Ty} {a b : Tm A} (f : Tm ([ A ] a ⇒ b)) →
-      Tm ([ [ A ] a ⇒ b ] comp f (Id a) ⇒ f)
+      Tm ([ [ A ] a ⇒ b ] Comp f (Id a) ⇒ f)
 
 postulate
-  assoc : {A : Ty} {a b c d : Tm A} → (f : Tm ([ A ] a ⇒ b)) → (g : Tm ([ A ] b ⇒ c)) →
-    (h : Tm ([ A ] c ⇒ d)) → Tm ([ [ A ] a ⇒ d ] comp h (comp g f) ⇒ comp (comp h g) f)
+  Assoc : {A : Ty} {a b c d : Tm A} → (f : Tm ([ A ] a ⇒ b)) → (g : Tm ([ A ] b ⇒ c)) →
+    (h : Tm ([ A ] c ⇒ d)) → Tm ([ [ A ] a ⇒ d ] Comp h (Comp g f) ⇒ Comp (Comp h g) f)
 ```

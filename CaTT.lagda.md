@@ -22,7 +22,7 @@ Coherences, as for example identities and inverses below, can be assumed on ad h
 postulates. Every coherence assumed rests on a pen-and-paper derivation in CaTT.
 
 ```agda
-postulate Inv : {A : Ty} {t u : Tm A} → Tm ([ A ] t ⇒ u)  → Tm ([ A ] u ⇒ t)
+postulate Inv : {A : Ty} {t u : Tm A} {f g : Tm ([ A ] t ⇒ u)} → Tm ([ _ ] f ⇒ g) → Tm ([ _ ] g ⇒ f)
 
 postulate Id : {A : Ty} (a : Tm A) → Tm ([ A ] a ⇒ a)
 ```

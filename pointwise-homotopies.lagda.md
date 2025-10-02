@@ -32,7 +32,7 @@ ptw-htpy-id φ a = Id (morph-base φ a)
 
 ptw-htpy-comp : {A B : Ty} {φ ψ ξ : morph A B}
   (Ψ : ptw-htpy ψ ξ) → (Φ : ptw-htpy φ ψ) → ptw-htpy φ ξ
-ptw-htpy-comp Ψ Φ a = comp (Ψ a) (Φ a)
+ptw-htpy-comp Ψ Φ a = Comp (Ψ a) (Φ a)
 
 ptw-htpy-iso : {A B : Ty} {φ ψ : morph A B} (Φ₀ Φ₁ : ptw-htpy φ ψ) → Set
 ptw-htpy-iso {A} {B} {φ} {ψ} Φ₀ Φ₁ = (a : Tm A) →
