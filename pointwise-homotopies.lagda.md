@@ -37,30 +37,17 @@ ptw-htpy-comp Ψ Φ a = Comp (Ψ a) (Φ a)
 ptw-htpy-iso : {A B : Ty} {φ ψ : morph A B} (Φ₀ Φ₁ : ptw-htpy φ ψ) → Set
 ptw-htpy-iso {A} {B} {φ} {ψ} Φ₀ Φ₁ = (a : Tm A) →
   Tm ([ ([ B ] morph-base φ a ⇒ morph-base ψ a) ] Φ₀ a ⇒ Φ₁ a)
+  
+-- record ptw-htpy-is-equiv {A B : Ty} {φ ψ : morph A B} (Φ : ptw-htpy φ ψ) : Set
+--   where
+--   field
+--     inv : ptw-htpy ψ φ
+--     inv-is-sec : ptw-htpy-iso {φ = ψ} {ψ} (ptw-htpy-comp {φ = ψ} {φ} {ψ} Φ inv) (ptw-htpy-id ψ)
+--     inv-is-ret : ptw-htpy-iso {φ = φ} {φ} (ptw-htpy-comp {φ = φ} {ψ} {φ} inv Φ) (ptw-htpy-id φ)
 
-record ptw-htpy-is-equiv {A B : Ty} {φ ψ : morph A B} (Φ : ptw-htpy φ ψ) : Set
-  where
-  field
-    inv : ptw-htpy ψ φ
-    inv-is-sec : ptw-htpy-iso {φ = ψ} {ψ} (ptw-htpy-comp {φ = ψ} {φ} {ψ} Φ inv) (ptw-htpy-id ψ)
-    inv-is-ret : ptw-htpy-iso {φ = φ} {φ} (ptw-htpy-comp {φ = φ} {ψ} {φ} inv Φ) (ptw-htpy-id φ)
-
-record ptw-htpy-equiv {A B : Ty} (φ ψ : morph A B) : Set
-  where
-  field
-    ptw-htpy-equiv-ptw-htpy : ptw-htpy φ ψ
-    ptw-htpy-equiv-is-equiv : ptw-htpy-is-equiv {φ = φ} {ψ} ptw-htpy-equiv-ptw-htpy
-
-record morph-is-equiv {A B : Ty} (φ : morph A B) : Set
-  where
-  field
-    inv : morph B A
-    inv-is-sec : ptw-htpy-equiv (morph-comp φ inv) (morph-id B)
-    inv-is-ret : ptw-htpy-equiv (morph-id A) (morph-comp inv φ)
-
-record morph-equiv (A B : Ty) : Set
-  where
-  field
-    morph-equiv-morph : morph A B
-    morph-equiv-is-equiv : morph-is-equiv morph-equiv-morph
+-- record ptw-htpy-equiv {A B : Ty} (φ ψ : morph A B) : Set
+--   where
+--   field
+--     ptw-htpy-equiv-ptw-htpy : ptw-htpy φ ψ
+--     ptw-htpy-equiv-is-equiv : ptw-htpy-is-equiv {φ = φ} {ψ} ptw-htpy-equiv-ptw-htpy
 ```
