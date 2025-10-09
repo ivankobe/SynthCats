@@ -42,16 +42,16 @@ Note that we can have t* A ≡ u and t* A ≡ U for some u ≠ U. The predicate 
 
 ```agda
 data ∂*_≡_ : Ty → Ty → Set where
-  ∂*-base : (A : Ty) → ∂* A ≡ A
-  ∂*-step : {A : Ty} (t u : Tm A) → (B : Ty) → ∂* A ≡ B → ∂* ([ A ] t ⇒ u) ≡ B
+  base : {A : Ty} → ∂* A ≡ A
+  step : {A : Ty} {t u : Tm A} → {B : Ty} → ∂* A ≡ B → ∂* ([ A ] t ⇒ u) ≡ B
 
 data s*_≡_ {B : Ty} : Ty → Tm B → Set where 
-  s*-base : (D E : Tm B) → s* ([ B ] D ⇒ E) ≡ D
-  s*-step : {A : Ty} {D : Tm B} → (s* A ≡ D) → (t u : Tm A) → s* ([ A ] t ⇒ u) ≡ D
+  base : {D E : Tm B} → s* ([ B ] D ⇒ E) ≡ D
+  step : {A : Ty} {D : Tm B} → s* A ≡ D → {t u : Tm A} → s* ([ A ] t ⇒ u) ≡ D
 
 data t*_≡_ {B : Ty} : Ty → Tm B → Set where 
-  t*-base : (C D : Tm B) → t* ([ B ] C ⇒ D) ≡ D
-  t*-step : {A : Ty} {D : Tm B} →  (t* A ≡ D) → (t u : Tm A) → t* ([ A ] t ⇒ u) ≡ D
+  base : {C D : Tm B} → t* ([ B ] C ⇒ D) ≡ D
+  step : {A : Ty} {D : Tm B} → t* A ≡ D → {t u : Tm A} → t* ([ A ] t ⇒ u) ≡ D
 ```
 
 The operators returning the codimension-1 boundary/source/target of a type. Since the latter is
@@ -61,26 +61,26 @@ satisfied.
 
 ```agda
 ∂ₜ : (A : Ty) → {C : Tm ⋆} → (p : t* A ≡ C) → Ty
-∂ₜ ([ _ ] _ ⇒ _) (t*-base _ _) = ⋆
-∂ₜ ([ A ] _ ⇒ _) (t*-step _ _ _) = A
+∂ₜ ([ _ ] _ ⇒ _) base = ⋆
+∂ₜ ([ A ] _ ⇒ _) (step _) = A
 
 ∂ₜ⁻ : (A : Ty) → {C : Tm ⋆} → (p : t* A ≡ C) → Tm (∂ₜ A p)
-∂ₜ⁻ ([ _ ] t ⇒ _) (t*-base _ _) = t
-∂ₜ⁻ ([ _ ] t ⇒ _) (t*-step _ _ _) = t
+∂ₜ⁻ ([ _ ] t ⇒ _) base = t
+∂ₜ⁻ ([ _ ] t ⇒ _) (step _) = t
 
 ∂ₜ⁺ : (A : Ty) → {C : Tm ⋆} → (p : t* A ≡ C) → Tm (∂ₜ A p)
-∂ₜ⁺ ([ _ ] _ ⇒ u) (t*-base _ _) = u
-∂ₜ⁺ ([ _ ] _ ⇒ u) (t*-step _ _ _) = u
+∂ₜ⁺ ([ _ ] _ ⇒ u) base = u
+∂ₜ⁺ ([ _ ] _ ⇒ u) (step _) = u
 
 ∂ₛ : (A : Ty) → {C : Tm ⋆} → (p : s* A ≡ C) → Ty
-∂ₛ ([ _ ] _ ⇒ _) (s*-base _ _) = ⋆
-∂ₛ ([ A ] _ ⇒ _) (s*-step _ _ _) = A
+∂ₛ ([ _ ] _ ⇒ _) base = ⋆
+∂ₛ ([ A ] _ ⇒ _) (step _) = A
 
 ∂ₛ⁻ : (A : Ty) → {C : Tm ⋆} → (p : s* A ≡ C) → Tm (∂ₛ A p)
-∂ₛ⁻ ([ _ ] t ⇒ _) (s*-base _ _) = t
-∂ₛ⁻ ([ _ ] t ⇒ _) (s*-step _ _ _) = t
+∂ₛ⁻ ([ _ ] t ⇒ _) base = t
+∂ₛ⁻ ([ _ ] t ⇒ _) (step _) = t
 
 ∂ₛ⁺ : (A : Ty) → {C : Tm ⋆} → (p : s* A ≡ C) → Tm (∂ₛ A p)
-∂ₛ⁺ ([ _ ] _ ⇒ u) (s*-base _ _) = u
-∂ₛ⁺ ([ _ ] _ ⇒ u) (s*-step _ _ _) = u
+∂ₛ⁺ ([ _ ] _ ⇒ u) base = u
+∂ₛ⁺ ([ _ ] _ ⇒ u) (step _) = u
 ```

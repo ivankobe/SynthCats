@@ -4,7 +4,7 @@
 open import CaTT
 open import whiskering
 open import type-morphisms
-open import pointwise-homotopies
+open import lax-transformations
 open import synthetic-categories
 ```
 
@@ -25,180 +25,180 @@ The operation of right (left) whiskering is functorial in the following sense.
 ```agda
 mutual
 
-  morph-r-unit :
-    {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) → morph (r-whisk-ty (Id D) B' p) B'
-  morph-r-unit {B = B} D ([ _ ] C ⇒ D) (t*-base _ _) = morph-id ([ B ] C ⇒ D)
-  morph-r-unit D ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step p t u) =
-    morph-precomp
-      ( morph-postcomp
+  r-unit-morph :
+    {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) → ty-morph (r-whisk-ty (Id D) B' p) B'
+  r-unit-morph {B = B} D ([ _ ] C ⇒ D) base = id-ty-morph ([ B ] C ⇒ D)
+  r-unit-morph D ([ [ B' ] x ⇒ y ] t ⇒ u) (step p) =
+    precomp-morph
+      ( postcomp-morph
         ( shift
-          ( morph-r-unit D ([ B' ] x ⇒ y) p)
-          ( r-whisk-ty (Id D) ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step p _ _))
-          ( ∂*-step _ _ _ (∂*-base _)))
-        ( t*-base _ _)
-        ( ptw-htpy-r-unit D ([ B' ] x ⇒ y) p u))
-      ( s*-base _ _)
-      ( Inv (ptw-htpy-r-unit D ([ B' ] x ⇒ y) p t))
+          ( r-unit-morph D ([ B' ] x ⇒ y) p)
+          ( r-whisk-ty (Id D) ([ [ B' ] x ⇒ y ] t ⇒ u) (step p))
+          ( step base))
+        ( base)
+        ( r-unit-lax-trans D ([ B' ] x ⇒ y) p u))
+      ( base)
+      ( Inv (r-unit-lax-trans D ([ B' ] x ⇒ y) p t))
 
-  ptw-htpy-r-unit : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) →
-    ptw-htpy (morph-comp (morph-r-unit D B' p) (r-whisk-morph B' p (Id D))) (morph-id B')
-  ptw-htpy-r-unit = r-unit-coh
+  r-unit-lax-trans : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) →
+    lax-trans (ty-morph-comp (r-unit-morph D B' p) (r-whisk-morph B' p (Id D))) (id-ty-morph B')
+  r-unit-lax-trans = R-unit-coh
 
   postulate
-    r-unit-coh : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) → (b : Tm B') → Tm
-      ([ B' ] morph-base (morph-r-unit D B' p) (morph-base (r-whisk-morph B' p (Id D)) b) ⇒
-              morph-base (morph-id B') b)
+    R-unit-coh : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) → (b : Tm B') → Tm
+      ([ B' ] ty-morph-base (r-unit-morph D B' p) (ty-morph-base (r-whisk-morph B' p (Id D)) b) ⇒
+              ty-morph-base (id-ty-morph B') b)
 
-  morph-r-assoc : {B : Ty} {D E F : Tm B} → (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
+  r-assoc-morph : {B : Ty} {D E F : Tm B} → (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
     (B' : Ty) → (p : t* B' ≡ D) →
-      morph
+      ty-morph
         ( r-whisk-ty (Comp h g) B' p)
         ( r-whisk-ty h (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p)) 
-  morph-r-assoc {B = B} {F = F} g h ([ _ ] C ⇒ _) (t*-base _ _) = morph-id ([ B ] C ⇒ F)
-  morph-r-assoc g h ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step (t*-base .x .y) t u) =
-    morph-postcomp
-      ( morph-precomp
+  r-assoc-morph {B = B} {F = F} g h ([ _ ] C ⇒ _) base = id-ty-morph ([ B ] C ⇒ F)
+  r-assoc-morph g h ([ [ B' ] x ⇒ y ] t ⇒ u) (step base) =
+    postcomp-morph
+      ( precomp-morph
         ( shift
-          ( morph-r-assoc g h ([ B' ] x ⇒ y) (t*-base _ _))
-          ( [ r-whisk-ty (Comp h g) ([ B' ] x ⇒ y) (t*-base _ _) ]
-            r-whisk-tm (Comp h g) ([ B' ] x ⇒ y) (t*-base _ _) t ⇒
-            r-whisk-tm (Comp h g) ([ B' ] x ⇒ y) (t*-base _ _) u)
-          ( ∂*-step _ _ _ (∂*-base _)))
-        ( s*-base _ _)
-        (Inv (ptw-htpy-r-assoc g h ([ B' ] x ⇒ y) (t*-base x y) t)))
-      ( t*-base _ _)
-      ( ptw-htpy-r-assoc g h ([ B' ] x ⇒ y) (t*-base _ _) u)
-  morph-r-assoc g h ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step (t*-step p .x .y) t u) =
-    morph-postcomp
-      ( morph-precomp
+          ( r-assoc-morph g h ([ B' ] x ⇒ y) base)
+          ( [ r-whisk-ty (Comp h g) ([ B' ] x ⇒ y) base ]
+            r-whisk-tm (Comp h g) t base ⇒
+            r-whisk-tm (Comp h g) u base)
+          ( step base))
+        ( base)
+        ( Inv (r-assoc-lax-trans g h ([ B' ] x ⇒ y) base t)))
+      ( base)
+      ( r-assoc-lax-trans g h ([ B' ] x ⇒ y) base u)
+  r-assoc-morph g h ([ [ B' ] x ⇒ y ] t ⇒ u) (step (step p)) =
+    postcomp-morph
+      ( precomp-morph
         ( shift
-          ( morph-r-assoc g h ([ B' ] x ⇒ y) (t*-step p _ _))
-          ( [ r-whisk-ty (Comp h g) ([ B' ] x ⇒ y) (t*-step p _ _) ]
-            r-whisk-tm (Comp h g) ([ B' ] x ⇒ y) (t*-step p _ _) t ⇒
-            r-whisk-tm (Comp h g) ([ B' ] x ⇒ y) (t*-step p _ _) u)
-          ( ∂*-step _ _ _ (∂*-base _)))
-        ( s*-base _ _)
-        (Inv (ptw-htpy-r-assoc g h ([ B' ] x ⇒ y) (t*-step p _ _) t)))
-      ( t*-base _ _)
-      ( ptw-htpy-r-assoc g h ([ B' ] x ⇒ y) (t*-step p _ _) u)
+          ( r-assoc-morph g h ([ B' ] x ⇒ y) (step p))
+          ( [ r-whisk-ty (Comp h g) ([ B' ] x ⇒ y) (step p) ]
+            r-whisk-tm (Comp h g) t (step p) ⇒
+            r-whisk-tm (Comp h g) u (step p))
+          ( step base))
+        ( base)
+        (Inv (r-assoc-lax-trans g h ([ B' ] x ⇒ y) (step p) t)))
+      ( base)
+      ( r-assoc-lax-trans g h ([ B' ] x ⇒ y) (step p) u)
 
-  ptw-htpy-r-assoc : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
+  r-assoc-lax-trans : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
     (B' : Ty) → (p : t* B' ≡ D) →
-      ptw-htpy
-        ( morph-comp
-          ( morph-r-assoc g h B' p)
+      lax-trans
+        ( ty-morph-comp
+          ( r-assoc-morph g h B' p)
           ( r-whisk-morph B' p (Comp h g)))
-        ( morph-comp
+        ( ty-morph-comp
           ( r-whisk-morph (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p) h)
           ( r-whisk-morph B' p g))
-  ptw-htpy-r-assoc = r-assoc-coh
+  r-assoc-lax-trans = R-assoc-coh
 
   postulate
-    r-assoc-coh : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) → 
+    R-assoc-coh : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) → 
       (B' : Ty) → (p : t* B' ≡ D) → (b : Tm B') → 
         Tm
           ([ r-whisk-ty h (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p) ]
-            morph-base (morph-r-assoc g h B' p)
-            (morph-base (r-whisk-morph B' p (Comp h g)) b) ⇒
-            morph-base
+            ty-morph-base (r-assoc-morph g h B' p)
+            (ty-morph-base (r-whisk-morph B' p (Comp h g)) b) ⇒
+            ty-morph-base
             (r-whisk-morph (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p) h)
-            (morph-base (r-whisk-morph B' p g) b))
+            (ty-morph-base (r-whisk-morph B' p g) b))
 
-  morph-r-assoc-inv : {B : Ty} {D E F : Tm B} → (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
+  r-assoc-morph-inv : {B : Ty} {D E F : Tm B} → (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
     (B' : Ty) → (p : t* B' ≡ D) →
-      morph
+      ty-morph
         ( r-whisk-ty h (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p)) 
         ( r-whisk-ty (Comp h g) B' p)
-  morph-r-assoc-inv {B = B} {F = F} g h ([ _ ] C ⇒ _) (t*-base C _) = morph-id ([ B ] C ⇒ F)
-  morph-r-assoc-inv g h ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step (t*-base .x .y) t u) =
-    morph-precomp
-      ( morph-postcomp
+  r-assoc-morph-inv {B = B} {F = F} g h ([ _ ] C ⇒ _) base = id-ty-morph ([ B ] C ⇒ F)
+  r-assoc-morph-inv g h ([ [ B' ] x ⇒ y ] t ⇒ u) (step base) =
+    precomp-morph
+      ( postcomp-morph
         ( shift
-          ( morph-r-assoc-inv g h ([ B' ] x ⇒ y) (t*-base _ _))
+          ( r-assoc-morph-inv g h ([ B' ] x ⇒ y) base)
           ( r-whisk-ty
             ( h)
-            ( r-whisk-ty g ([ _ ] t ⇒ u) (t*-step _ _ _))
-            ( t*-r-whisk-ty g ([ _ ] t ⇒ u) (t*-step _ _ _)))
-          ( ∂*-step _ _ _ (∂*-base _)))
-        ( t*-base _ _)
-        ( ptw-htpy-r-assoc-inv g h ([ B' ] x ⇒ y) (t*-base _ _) u))
-      ( s*-base _ _)
-      (Inv (ptw-htpy-r-assoc-inv g h ([ B' ] x ⇒ y) (t*-base x y) t))
-  morph-r-assoc-inv g h ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step (t*-step p .x .y) t u) =
-    morph-precomp
-      ( morph-postcomp
+            ( r-whisk-ty g ([ _ ] t ⇒ u) (step _))
+            ( t*-r-whisk-ty g ([ _ ] t ⇒ u) (step _)))
+          ( step base))
+        ( base)
+        ( r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) base u))
+      ( base)
+      (Inv (r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) base t))
+  r-assoc-morph-inv g h ([ [ B' ] x ⇒ y ] t ⇒ u) (step (step p)) =
+    precomp-morph
+      ( postcomp-morph
         ( shift
-          ( morph-r-assoc-inv g h ([ B' ] x ⇒ y) (t*-step p _ _))
+          ( r-assoc-morph-inv g h ([ B' ] x ⇒ y) (step p))
           ( r-whisk-ty
             ( h)
-            ( r-whisk-ty g ([ _ ] t ⇒ u) (t*-step _ _ _))
-            ( t*-r-whisk-ty g ([ _ ] t ⇒ u) (t*-step _ _ _)))
-          ( ∂*-step _ _ _ (∂*-base _)))
-        ( t*-base _ _)
-        ( ptw-htpy-r-assoc-inv g h ([ B' ] x ⇒ y) (t*-step p _ _) u))
-      ( s*-base _ _)
-      (Inv (ptw-htpy-r-assoc-inv g h ([ B' ] x ⇒ y) (t*-step p _ _) t))
+            ( r-whisk-ty g ([ _ ] t ⇒ u) (step _))
+            ( t*-r-whisk-ty g ([ _ ] t ⇒ u) (step _)))
+          ( step base))
+        ( base)
+        ( r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) (step p) u))
+      ( base)
+      (Inv (r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) (step p) t))
 
-  ptw-htpy-r-assoc-inv : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
+  r-assoc-lax-trans-inv : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
     (B' : Ty) → (p : t* B' ≡ D) →
-      ptw-htpy
-        ( morph-comp
-          ( morph-r-assoc-inv g h B' p)
-          ( morph-comp
+      lax-trans
+        ( ty-morph-comp
+          ( r-assoc-morph-inv g h B' p)
+          ( ty-morph-comp
             ( r-whisk-morph (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p) h)
             ( r-whisk-morph B' p g)))
         ( r-whisk-morph B' p (Comp h g))
-  ptw-htpy-r-assoc-inv = r-assoc-inv-coh
+  r-assoc-lax-trans-inv = R-assoc-inv-coh
 
   postulate
-    r-assoc-inv-coh : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
+    R-assoc-inv-coh : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
       (B' : Ty) → (p : t* B' ≡ D) → (b : Tm B') → 
         Tm
           ([ r-whisk-ty (Comp h g) B' p ]
-            morph-base (morph-r-assoc-inv g h B' p)
-            (morph-base
-              (r-whisk-morph (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p) h)
-              (morph-base (r-whisk-morph B' p g) b))
-            ⇒ morph-base (r-whisk-morph B' p (Comp h g)) b)
+            ty-morph-base (r-assoc-morph-inv g h B' p)
+            ( ty-morph-base
+              ( r-whisk-morph (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p) h)
+              ( ty-morph-base (r-whisk-morph B' p g) b))
+            ⇒ ty-morph-base (r-whisk-morph B' p (Comp h g)) b)
 
-  morph-r-transport : {B : Ty} {D E : Tm B}  {g g' : Tm ([ B ] D ⇒ E)} (β : Tm ([ _ ] g ⇒ g')) →
-    (B' : Ty) → (p : t* B' ≡ D) → morph (r-whisk-ty g B' p) (r-whisk-ty g' B' p)
-  morph-r-transport {B = B} {E = E} β ([ _ ] C ⇒ _) (t*-base C _) = morph-id ([ B ] C ⇒ E)
-  morph-r-transport {g = g} {g'} β ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step (t*-base .x .y) t u) =
-    morph-precomp
-      ( morph-postcomp
+  r-transport-morph : {B : Ty} {D E : Tm B}  {g g' : Tm ([ B ] D ⇒ E)} (β : Tm ([ _ ] g ⇒ g')) →
+    (B' : Ty) → (p : t* B' ≡ D) → ty-morph (r-whisk-ty g B' p) (r-whisk-ty g' B' p)
+  r-transport-morph {B = B} {E = E} β ([ _ ] C ⇒ _) base = id-ty-morph ([ B ] C ⇒ E)
+  r-transport-morph {g = g} {g'} β ([ [ B' ] x ⇒ y ] t ⇒ u) (step base) =
+    precomp-morph
+      ( postcomp-morph
         ( shift
-          ( morph-r-transport β ([ B' ] x ⇒ y) (t*-base _ _))
-          ( r-whisk-ty g ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step (t*-base _ _) _ _))
-          ( ∂*-step _ _ _ (∂*-base _)))
-        ( t*-base _ _)
-        ( ptw-htpy-r-transport β ([ B' ] x ⇒ y) (t*-base _ _) u))
-      ( s*-base _ _)
-      ( Inv (ptw-htpy-r-transport β ([ B' ] x ⇒ y) (t*-base _ _) t))
-  morph-r-transport {g = g} {g'} β ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step (t*-step p .x .y) t u) =
-    morph-precomp
-      ( morph-postcomp
+          ( r-transport-morph β ([ B' ] x ⇒ y) base)
+          ( r-whisk-ty g ([ [ B' ] x ⇒ y ] t ⇒ u) (step base))
+          ( step base))
+        ( base)
+        ( r-transport-lax-trans β ([ B' ] x ⇒ y) base u))
+      ( base)
+      ( Inv (r-transport-lax-trans β ([ B' ] x ⇒ y) base t))
+  r-transport-morph {g = g} {g'} β ([ [ B' ] x ⇒ y ] t ⇒ u) (step (step p)) =
+    precomp-morph
+      ( postcomp-morph
         ( shift
-          ( morph-r-transport β ([ B' ] x ⇒ y) (t*-step p _ _))
-          ( r-whisk-ty g ([ [ B' ] x ⇒ y ] t ⇒ u) (t*-step (t*-step p _ _) _ _))
-          ( ∂*-step _ _ _ (∂*-base _)))
-        ( t*-base _ _)
-        ( ptw-htpy-r-transport β ([ B' ] x ⇒ y) (t*-step p _ _) u))
-      ( s*-base _ _)
-      ( Inv (ptw-htpy-r-transport β ([ B' ] x ⇒ y) (t*-step p _ _) t))
+          ( r-transport-morph β ([ B' ] x ⇒ y) (step p))
+          ( r-whisk-ty g ([ [ B' ] x ⇒ y ] t ⇒ u) (step (step p)))
+          ( step base))
+        ( base)
+        ( r-transport-lax-trans β ([ B' ] x ⇒ y) (step p) u))
+      ( base)
+      ( Inv (r-transport-lax-trans β ([ B' ] x ⇒ y) (step p) t))
     
-  ptw-htpy-r-transport : {B : Ty} {D E : Tm B}  {g g' : Tm ([ B ] D ⇒ E)}
+  r-transport-lax-trans : {B : Ty} {D E : Tm B}  {g g' : Tm ([ B ] D ⇒ E)}
     (β : Tm ([ _ ] g ⇒ g')) → (B' : Ty) → (p : t* B' ≡ D) →
-    ptw-htpy
-      ( morph-comp (morph-r-transport β B' p) (r-whisk-morph B' p g))
+    lax-trans
+      ( ty-morph-comp (r-transport-morph β B' p) (r-whisk-morph B' p g))
       ( r-whisk-morph B' p g')
-  ptw-htpy-r-transport = r-transport-coh
+  r-transport-lax-trans = R-transport-coh
 
   postulate
-    r-transport-coh : {B : Ty} {D E : Tm B}  {g g' : Tm ([ B ] D ⇒ E)}
+    R-transport-coh : {B : Ty} {D E : Tm B}  {g g' : Tm ([ B ] D ⇒ E)}
       (β : Tm ([ _ ] g ⇒ g')) → (B' : Ty) → (p : t* B' ≡ D) → (b : Tm B') → 
         Tm
           ([ r-whisk-ty g' B' p ]
-            morph-base (morph-r-transport β B' p) (morph-base (r-whisk-morph B' p g) b) ⇒
-            morph-base (r-whisk-morph B' p g') b)
+            ty-morph-base (r-transport-morph β B' p) (ty-morph-base (r-whisk-morph B' p g) b) ⇒
+            ty-morph-base (r-whisk-morph B' p g') b)
 ```
