@@ -1,5 +1,6 @@
 ```agda
 {-# OPTIONS --guardedness #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 open import CaTT
 open import whiskering
@@ -93,6 +94,18 @@ id-lax-trans-is-iso : {A B : Ty} (φ : ty-morph A B) → lax-trans-is-iso {φ = 
 lax-trans-is-iso-inv (id-lax-trans-is-iso φ) = id-lax-trans φ
 lax-trans-is-iso-inv-is-sec (id-lax-trans-is-iso φ) = λ α → Left-unit-law _
 lax-trans-is-iso-inv-is-ret (id-lax-trans-is-iso φ) = λ α → Right-unit-law _  
+```
+
+```agda
+lax-iso-inv : {A B : Ty} {φ ψ : ty-morph A B} → lax-iso φ ψ → lax-iso ψ φ
+lax-iso-inv Φ = record {
+  lax-iso-lax-trans = lax-iso-inv-map Φ ;
+  lax-iso-is-iso = record
+    { lax-trans-is-iso-inv = lax-iso-map Φ
+    ; lax-trans-is-iso-inv-is-sec = λ a → lax-iso-inv-is-ret Φ a
+    ; lax-trans-is-iso-inv-is-ret = λ a → lax-iso-inv-is-sec Φ a
+    }
+  }
 ```
 
 In fact every lax transformation between morphisms whose codomain is of positive dimension is
