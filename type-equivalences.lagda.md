@@ -4,10 +4,10 @@
 
 open import CaTT
 open import whiskering
-open import synthetic-categories
+-- open import synthetic-categories
 open import type-morphisms
 open import lax-transformations
-open import functoriality-of-whiskering
+-- open import functoriality-of-whiskering
 
 module type-equivalences where
 ```
@@ -116,60 +116,6 @@ ty-morph-is-equiv-inv {φ = φ} P = record
   }
 ```
 
-
-```
-record ty-morph-is-adj {A B : Ty} (φ : ty-morph A B) : Set
-  where
-  field
-    ty-morph-is-adj-inv : ty-morph B A
-    ty-morph-is-adj-inv-is-sec : lax-trans (ty-morph-comp φ ty-morph-is-adj-inv) (id-ty-morph B)
-    ty-morph-is-adj-inv-is-ret : lax-trans (id-ty-morph A) (ty-morph-comp ty-morph-is-adj-inv φ)
-
-open ty-morph-is-adj public
-
-record ty-adj (A B : Ty) : Set
-  where
-  field
-    ty-adj-morph : ty-morph A B
-    ty-adj-is-adj : ty-morph-is-adj ty-adj-morph
-
-open ty-adj public
-```
-
-```agda
-ty-adj-map : {A B : Ty} → ty-adj A B → ty-morph A B
-ty-adj-map = ty-adj-morph
-
-ty-adj-inv-map : {A B : Ty} → ty-adj A B → ty-morph B A
-ty-adj-inv-map φ = ty-morph-is-adj-inv (ty-adj-is-adj φ)
-
-ty-adj-inv-is-sec-map : {A B : Ty} → (φ : ty-adj A B) →
-  lax-trans (ty-morph-comp (ty-adj-morph φ) (ty-adj-inv-map φ)) (id-ty-morph B)
-ty-adj-inv-is-sec-map φ = ty-morph-is-adj-inv-is-sec (ty-adj-is-adj φ)
-
-ty-adj-inv-is-ret-map : {A B : Ty} → (φ : ty-adj A B) →
-  lax-trans (id-ty-morph A) (ty-morph-comp (ty-adj-inv-map φ) (ty-adj-morph φ))
-ty-adj-inv-is-ret-map φ = ty-morph-is-adj-inv-is-ret (ty-adj-is-adj φ)
-```
-
-If a type morphism between types of nonzero dimension is part of an adjunction,
-then it is an equivalence. 
-
-```agda
-ty-morph-is-adj-is-equiv : {A B : Ty} {a a' : Tm A} {b b' : Tm B} 
-  {φ : ty-morph ([ A ] a ⇒ a') ([ B ] b ⇒ b')} → ty-morph-is-adj φ → ty-morph-is-equiv φ
-ty-morph-is-equiv-inv-map (ty-morph-is-adj-is-equiv p) = ty-morph-is-adj-inv p
-ty-morph-is-equiv-inv-is-sec (ty-morph-is-adj-is-equiv p) =
-  lax-trans-iso (ty-morph-is-adj-inv-is-sec p)
-ty-morph-is-equiv-inv-is-ret (ty-morph-is-adj-is-equiv p) =
-  lax-trans-iso (ty-morph-is-adj-inv-is-ret p)
-
-ty-morph-adj-equiv : {A B : Ty} {a a' : Tm A} {b b' : Tm B} →
-  ty-adj ([ A ] a ⇒ a') ([ B ] b ⇒ b') → ty-equiv ([ A ] a ⇒ a') ([ B ] b ⇒ b')
-ty-equiv-morph (ty-morph-adj-equiv φ) = ty-adj-map φ
-ty-equiv-is-equiv (ty-morph-adj-equiv φ) = ty-morph-is-adj-is-equiv (ty-adj-is-adj φ)
-```
-
 # Properties of type equivalences.
 
 The identity type morphism is an equivalence.
@@ -201,18 +147,24 @@ If a type morphism f : A ⇝ B is an equivalence and tere is a lax isomorphism �
 then f' is an equivalence. 
 
 ```agda
-ty-equiv-lax-iso-is-adj : {A B : Ty} {f f' : ty-morph A B} (p : ty-morph-is-equiv f) →
-  (φ : lax-iso f f') → ty-morph-is-adj f'
-ty-equiv-lax-iso-is-adj {f = f} {f'} p φ = record
-  { ty-morph-is-adj-inv = ty-morph-is-equiv-inv-map p
-  ; ty-morph-is-adj-inv-is-sec = λ b →
-    Comp
-      ( ty-morph-is-equiv-inv-is-sec-map f p b)
-      ( lax-iso-inv-map φ _)
-  ; ty-morph-is-adj-inv-is-ret = λ a →
-      Comp
-        ( ty-morph-base (ty-morph-step (ty-morph-is-equiv-inv-map p)) (lax-iso-lax-trans φ a))
-        ( ty-morph-is-equiv-inv-is-ret-map f p a)
+ty-equiv-lax-iso-is-equiv :  {A B : Ty} {t u : Tm A} {v w : Tm B}
+  {f f' : ty-morph ([ A ] t ⇒ u) ([ B ] v ⇒ w)} (p : ty-morph-is-equiv f) →
+    (φ : lax-iso f f') → ty-morph-is-equiv f'
+ty-equiv-lax-iso-is-equiv {f = f} {f'} p φ = record
+  { ty-morph-is-equiv-inv-map = ty-morph-is-equiv-inv-map p
+  ; ty-morph-is-equiv-inv-is-sec = record
+    { lax-iso-lax-trans = λ b →
+        Comp
+          ( ty-morph-is-equiv-inv-is-sec-map f p b)
+          ( lax-iso-inv-map φ _) ;
+      lax-iso-is-iso = lax-trans-nonzero-dim-is-iso _
+      }
+  ; ty-morph-is-equiv-inv-is-ret = record
+    { lax-iso-lax-trans = λ a → 
+        Comp
+          ( ty-morph-base (ty-morph-step (ty-morph-is-equiv-inv-map p)) (lax-iso-lax-trans φ a))
+          ( ty-morph-is-equiv-inv-is-ret-map f p a) ;
+      lax-iso-is-iso = lax-trans-nonzero-dim-is-iso _ }
   }
 ```
 
@@ -239,41 +191,53 @@ open ty-morph-has-ret public
 If a type morphism has both a section and a retraction, then it is an equivalence.
 
 ```agda
-ty-morph-sec-ret-equiv : {A B : Ty} {φ : ty-morph A B}
-  (σ : ty-morph-has-sec φ) → (ρ : ty-morph-has-ret φ) → ty-morph-is-adj φ
+ty-morph-sec-ret-equiv : {A B : Ty} {t u : Tm A} {v w : Tm B}
+  {φ : ty-morph ([ A ] t ⇒ u) ([ B ] v ⇒ w)}
+    (σ : ty-morph-has-sec φ) → (ρ : ty-morph-has-ret φ) → ty-morph-is-equiv φ
 ty-morph-sec-ret-equiv {φ = φ} σ ρ = record
-  { ty-morph-is-adj-inv = ty-morph-has-sec-sec σ
-  ; ty-morph-is-adj-inv-is-sec = lax-iso-map (ty-morph-has-sec-is-sec σ)
-  ; ty-morph-is-adj-inv-is-ret = λ a →
-      Comp
-        ( lax-iso-inv-map (ty-morph-has-ret-is-ret ρ) _)
-        ( Comp
-          ( ty-morph-base
-            ( ty-morph-step (ty-morph-has-ret-ret ρ))
-            ( lax-iso-inv-map (ty-morph-has-sec-is-sec σ) (ty-morph-base φ a)))
-          ( lax-iso-map (ty-morph-has-ret-is-ret ρ) _))
+  { ty-morph-is-equiv-inv-map = ty-morph-has-sec-sec σ
+  ; ty-morph-is-equiv-inv-is-sec = record {
+      lax-iso-lax-trans = lax-iso-map (ty-morph-has-sec-is-sec σ) ;
+      lax-iso-is-iso = lax-trans-nonzero-dim-is-iso _ }
+  ; ty-morph-is-equiv-inv-is-ret = record {
+      lax-iso-lax-trans = λ a →
+        Comp
+          ( lax-iso-inv-map (ty-morph-has-ret-is-ret ρ) _)
+          ( Comp
+            ( ty-morph-base
+              ( ty-morph-step (ty-morph-has-ret-ret ρ))
+              ( lax-iso-inv-map (ty-morph-has-sec-is-sec σ) (ty-morph-base φ a)))
+            ( lax-iso-map (ty-morph-has-ret-is-ret ρ) _)) ;
+      lax-iso-is-iso = lax-trans-nonzero-dim-is-iso _ }
   }
 ```
 
 Type equivalences satisfy the three for two property.
 
-```agda
-ty-equiv-comp : {A B C : Ty} {φ : ty-morph A B} {ψ : ty-morph B C}
-  (P : ty-morph-is-equiv φ) → (P' : ty-morph-is-equiv ψ) → ty-morph-is-adj (ty-morph-comp ψ φ) 
+--- ```agda
+ty-equiv-comp : {A B C : Ty} {t u : Tm A} {v w : Tm B} {z x : Tm C}
+  {φ : ty-morph ( [ A ] t ⇒ u) ([ B ] v ⇒ w)}
+  {ψ : ty-morph ([ B ] v ⇒ w) ([ C ] z ⇒ x)} (P : ty-morph-is-equiv φ) → (P' : ty-morph-is-equiv ψ) →
+    ty-morph-is-equiv (ty-morph-comp ψ φ) 
 ty-equiv-comp {φ = φ} {ψ} P P' = record
-  { ty-morph-is-adj-inv = ty-morph-comp (ty-morph-is-equiv-inv-map P) (ty-morph-is-equiv-inv-map P')
-  ; ty-morph-is-adj-inv-is-sec = λ a →
-      Comp
-        ( ty-morph-is-equiv-inv-is-sec-map ψ P' a)
-        ( ty-morph-base
-          ( ty-morph-step ψ)
-          ( ty-morph-is-equiv-inv-is-sec-map φ P _))
-  ; ty-morph-is-adj-inv-is-ret = λ a →
-      Comp
-        ( ty-morph-base
-          ( ty-morph-step (ty-morph-is-equiv-inv-map P))
-          ( ty-morph-is-equiv-inv-is-ret-map ψ P' _))
-        ( ty-morph-is-equiv-inv-is-ret-map φ P a)
+  { ty-morph-is-equiv-inv-map =
+      ty-morph-comp (ty-morph-is-equiv-inv-map P) (ty-morph-is-equiv-inv-map P')
+  ; ty-morph-is-equiv-inv-is-sec = record {
+      lax-iso-lax-trans = λ a →
+        Comp
+          ( ty-morph-is-equiv-inv-is-sec-map ψ P' a)
+          ( ty-morph-base
+            ( ty-morph-step ψ)
+            ( ty-morph-is-equiv-inv-is-sec-map φ P _)) ;
+      lax-iso-is-iso = lax-trans-nonzero-dim-is-iso _ }
+  ; ty-morph-is-equiv-inv-is-ret = record {
+      lax-iso-lax-trans = λ a →
+        Comp
+          ( ty-morph-base
+            ( ty-morph-step (ty-morph-is-equiv-inv-map P))
+            ( ty-morph-is-equiv-inv-is-ret-map ψ P' _))
+          ( ty-morph-is-equiv-inv-is-ret-map φ P a) ;
+      lax-iso-is-iso = lax-trans-nonzero-dim-is-iso _ }
   }
 
 ty-morph-is-equiv-left-factor-lax-iso : {A B C : Ty} {φ : ty-morph A B} {ψ : ty-morph B C}
@@ -291,22 +255,86 @@ ty-morph-is-equiv-left-factor-lax-iso {φ = φ} {ψ} P P' = record
       } 
     }
 
-ty-morph-is-equiv-left-factor : {A B C : Ty} {φ : ty-morph A B} {ψ : ty-morph B C}
-  (P : ty-morph-is-equiv ψ) → (P' : ty-morph-is-equiv (ty-morph-comp ψ φ)) → ty-morph-is-adj φ
-ty-morph-is-equiv-left-factor {φ = φ} {ψ} P P' = record
-  { ty-morph-is-adj-inv = ty-morph-comp (ty-morph-is-equiv-inv-map P') ψ
-  ; ty-morph-is-adj-inv-is-sec = λ b →
-      Comp
-        ( ty-morph-is-equiv-inv-is-ret-inv ψ P b)
-        {! !}
-  ; ty-morph-is-adj-inv-is-ret = {!   !}
-  }
+ty-morph-is-equiv-left-factor : {A B C : Ty} {t u : Tm A} {v w : Tm B} {z x : Tm C} 
+  {φ : ty-morph ([ A ] t ⇒ u) ([ B ] v ⇒ w)} {ψ : ty-morph ([ B ] v ⇒ w) ([ C ] z ⇒ x)}
+    (P : ty-morph-is-equiv ψ) → (P' : ty-morph-is-equiv (ty-morph-comp ψ φ)) → ty-morph-is-equiv φ
+ty-morph-is-equiv-left-factor {φ = φ} {ψ} P P' =
+  ty-equiv-lax-iso-is-equiv
+    ( ty-equiv-comp P' (ty-morph-is-equiv-inv P))
+    ( lax-iso-inv (ty-morph-is-equiv-left-factor-lax-iso P P'))
+
+ty-morph-is-equiv-right-factor-lax-iso : {A B C : Ty} {t u : Tm A} {v w : Tm B} {z x : Tm C} 
+  {φ : ty-morph ([ A ] t ⇒ u) ([ B ] v ⇒ w)} {ψ : ty-morph ([ B ] v ⇒ w) ([ C ] z ⇒ x)}
+    (P : ty-morph-is-equiv φ) → (P' : ty-morph-is-equiv (ty-morph-comp ψ φ)) →
+      lax-iso ψ (ty-morph-comp (ty-morph-comp ψ φ) (ty-morph-is-equiv-inv-map P))
+ty-morph-is-equiv-right-factor-lax-iso {φ = φ} {ψ} P P' = record
+  { lax-iso-lax-trans = λ b →
+      ty-morph-base (ty-morph-step ψ) (ty-morph-is-equiv-inv-is-sec-inv φ P b) ;
+    lax-iso-is-iso = lax-trans-nonzero-dim-is-iso _ }
+
+ty-morph-is-equiv-right-factor : {A B C : Ty} {t u : Tm A} {v w : Tm B} {z x : Tm C} 
+  {φ : ty-morph ([ A ] t ⇒ u) ([ B ] v ⇒ w)} {ψ : ty-morph ([ B ] v ⇒ w) ([ C ] z ⇒ x)}
+    (P : ty-morph-is-equiv φ) → (P' : ty-morph-is-equiv (ty-morph-comp ψ φ)) → ty-morph-is-equiv ψ
+ty-morph-is-equiv-right-factor {φ = φ} {ψ} P P' =
+  ty-equiv-lax-iso-is-equiv
+    ( ty-equiv-comp (ty-morph-is-equiv-inv P) P')
+    ( lax-iso-inv (ty-morph-is-equiv-right-factor-lax-iso P P')) 
 ```
 
+Type equivalences satisfy the six-for-two property.
 
+```agda
+ty-equiv-6-for-2-middle-factor-sec : {A B C D : Ty} {a' a'' : Tm A} {b' b'' : Tm B} {c' c'' : Tm C}
+  {d' d'' : Tm D} (f : ty-morph ([ A ] a' ⇒ a'') ([ B ] b' ⇒ b'')) →
+  (g : ty-morph ([ B ] b' ⇒ b'') ([ C ] c' ⇒ c'')) →
+  (h : ty-morph ([ C ] c' ⇒ c'') ([ D ] d' ⇒ d'')) → 
+  ty-morph-is-equiv (ty-morph-comp g f) → ty-morph-is-equiv (ty-morph-comp h g) → ty-morph-has-sec g
+ty-equiv-6-for-2-middle-factor-sec f g h P P' = record {
+  ty-morph-has-sec-sec = ty-morph-comp f (ty-morph-is-equiv-inv-map P) ;
+  ty-morph-has-sec-is-sec = record {
+    lax-iso-lax-trans = λ c → ty-morph-is-equiv-inv-is-sec-map (ty-morph-comp g f) P c ;
+    lax-iso-is-iso = lax-trans-nonzero-dim-is-iso _ } }
 
-If a functor f : C → D is an equivalence and A is a type such that t* A ≡ C, then the right
-whiskering morphism f ⋆ _ : A ⇝ f ⋆ A is a type equivalence.
+ty-equiv-6-for-2-middle-factor-ret : {A B C D : Ty} {a' a'' : Tm A} {b' b'' : Tm B} {c' c'' : Tm C}
+  {d' d'' : Tm D} (f : ty-morph ([ A ] a' ⇒ a'') ([ B ] b' ⇒ b'')) →
+  (g : ty-morph ([ B ] b' ⇒ b'') ([ C ] c' ⇒ c'')) →
+  (h : ty-morph ([ C ] c' ⇒ c'') ([ D ] d' ⇒ d'')) → 
+  ty-morph-is-equiv (ty-morph-comp g f) → ty-morph-is-equiv (ty-morph-comp h g) → ty-morph-has-ret g
+ty-equiv-6-for-2-middle-factor-ret f g h P P' = record {
+  ty-morph-has-ret-ret = ty-morph-comp (ty-morph-is-equiv-inv-map P') h ;
+  ty-morph-has-ret-is-ret = record {
+    lax-iso-lax-trans = λ b → ty-morph-is-equiv-inv-is-ret-map (ty-morph-comp h g) P' b ;
+    lax-iso-is-iso = lax-trans-nonzero-dim-is-iso _ } }
+
+ty-equiv-6-for-2-middle-factor : {A B C D : Ty} {a' a'' : Tm A} {b' b'' : Tm B} {c' c'' : Tm C}
+  {d' d'' : Tm D} (f : ty-morph ([ A ] a' ⇒ a'') ([ B ] b' ⇒ b'')) →
+  (g : ty-morph ([ B ] b' ⇒ b'') ([ C ] c' ⇒ c'')) →
+  (h : ty-morph ([ C ] c' ⇒ c'') ([ D ] d' ⇒ d'')) → 
+  ty-morph-is-equiv (ty-morph-comp g f) → ty-morph-is-equiv (ty-morph-comp h g) → ty-morph-is-equiv g
+ty-equiv-6-for-2-middle-factor f g h P P' =
+  ty-morph-sec-ret-equiv
+    ( ty-equiv-6-for-2-middle-factor-sec f g h P P' )
+    ( ty-equiv-6-for-2-middle-factor-ret f g h P P')
+
+ty-equiv-6-for-2-left-factor : {A B C D : Ty} {a' a'' : Tm A} {b' b'' : Tm B} {c' c'' : Tm C}
+  {d' d'' : Tm D} (f : ty-morph ([ A ] a' ⇒ a'') ([ B ] b' ⇒ b'')) →
+  (g : ty-morph ([ B ] b' ⇒ b'') ([ C ] c' ⇒ c'')) →
+  (h : ty-morph ([ C ] c' ⇒ c'') ([ D ] d' ⇒ d'')) → 
+  ty-morph-is-equiv (ty-morph-comp g f) → ty-morph-is-equiv (ty-morph-comp h g) → ty-morph-is-equiv f
+ty-equiv-6-for-2-left-factor f g h P P' =
+  ty-morph-is-equiv-left-factor (ty-equiv-6-for-2-middle-factor f g h P P') P
+
+ty-equiv-6-for-2-right-factor : {A B C D : Ty} {a' a'' : Tm A} {b' b'' : Tm B} {c' c'' : Tm C}
+  {d' d'' : Tm D} (f : ty-morph ([ A ] a' ⇒ a'') ([ B ] b' ⇒ b'')) →
+  (g : ty-morph ([ B ] b' ⇒ b'') ([ C ] c' ⇒ c'')) →
+  (h : ty-morph ([ C ] c' ⇒ c'') ([ D ] d' ⇒ d'')) → 
+  ty-morph-is-equiv (ty-morph-comp g f) → ty-morph-is-equiv (ty-morph-comp h g) → ty-morph-is-equiv h
+ty-equiv-6-for-2-right-factor f g h P P' =
+  ty-morph-is-equiv-right-factor (ty-equiv-6-for-2-middle-factor f g h P P') P'
+```
+
+-- If a functor f : C → D is an equivalence and A is a type such that t* A ≡ C, then the right
+-- whiskering morphism f ⋆ _ : A ⇝ f ⋆ A is a type equivalence.
 
 
 -- ```agda

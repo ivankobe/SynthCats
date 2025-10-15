@@ -5,7 +5,6 @@ open import CaTT
 open import whiskering
 open import type-morphisms
 open import lax-transformations
-open import synthetic-categories
 ```
 
 ```agda
