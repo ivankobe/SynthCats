@@ -43,10 +43,19 @@ mutual
     lax-trans (ty-morph-comp (r-unit-morph D B' p) (r-whisk-morph B' p (Id D))) (id-ty-morph B')
   r-unit-lax-trans = R-unit-coh
 
+  r-unit-lax-trans-inv : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) →
+    lax-trans (ty-morph-comp (r-whisk-morph B' p (Id D)) (r-unit-morph D B' p)) (id-ty-morph _)
+  r-unit-lax-trans-inv = R-unit-coh-inv
+  
   postulate
     R-unit-coh : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) → (b : Tm B') → Tm
       ([ B' ] ty-morph-base (r-unit-morph D B' p) (ty-morph-base (r-whisk-morph B' p (Id D)) b) ⇒
               ty-morph-base (id-ty-morph B') b)
+
+  postulate
+    R-unit-coh-inv : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) → (b : Tm _) → Tm
+      ([ _ ] ty-morph-base (r-whisk-morph B' p (Id D)) (ty-morph-base (r-unit-morph D B' p) b) ⇒
+              ty-morph-base (id-ty-morph _) b)
 
   r-assoc-morph : {B : Ty} {D E F : Tm B} → (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
     (B' : Ty) → (p : t* B' ≡ D) →

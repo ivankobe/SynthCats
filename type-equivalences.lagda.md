@@ -1,6 +1,5 @@
 ```agda
 {-# OPTIONS --guardedness #-}
-{-# OPTIONS --allow-unsolved-metas #-}
 
 open import CaTT
 open import whiskering
@@ -332,36 +331,3 @@ ty-equiv-6-for-2-right-factor : {A B C D : Ty} {a' a'' : Tm A} {b' b'' : Tm B} {
 ty-equiv-6-for-2-right-factor f g h P P' =
   ty-morph-is-equiv-right-factor (ty-equiv-6-for-2-middle-factor f g h P P') P'
 ```
-
--- If a functor f : C → D is an equivalence and A is a type such that t* A ≡ C, then the right
--- whiskering morphism f ⋆ _ : A ⇝ f ⋆ A is a type equivalence.
-
-
--- ```agda
--- r-whisk-equiv-morph-is-equiv : {C D : cat} (f : equiv C D) → (A : Ty) → (p : t* A ≡ C) → 
---   morph-is-equiv (r-whisk-morph A p (equiv-map f))
--- morph-is-equiv-inv (r-whisk-equiv-morph-is-equiv {C} f A p) =
---   morph-comp (morph-r-unit C A p)
---     ( morph-comp (morph-r-transport (equiv-ret-is-ret f) A p)
---       ( morph-comp (morph-r-assoc-inv (equiv-map f) (equiv-ret-map f) A p)
---         (r-whisk-morph _ (t*-r-whisk-ty (equiv-map f) A p) (equiv-ret-map f))))
--- morph-is-equiv-inv-is-ret (r-whisk-equiv-morph-is-equiv {C} f ([ A ] t ⇒ u) p) = 
---   lax-trans-nonzero-dim-iso
---     ( λ α → Inv 
---       ( Comp ( lax-trans-r-unit C ([ A ] _ ⇒ _) p α)
---         ( Comp
---           ( morph-base (shift (morph-r-unit C ([ A ] t ⇒ u) p) _ (∂*-step _ _ _ (∂*-base _)))
---             ( lax-trans-r-transport (equiv-ret-is-ret f) ([ A ] t ⇒ u) p α))
---           ( morph-base
---             ( shift
---               ( morph-comp
---                 ( morph-r-unit C ([ A ] t ⇒ u) p)
---                 ( morph-r-transport (equiv-ret-is-ret f) ([ A ] t ⇒ u) p))
---               ( _)
---               ( ∂*-step _ _ _ (∂*-base _)))
---             ( lax-trans-r-assoc-inv (equiv-map f) (equiv-ret-map f) ([ A ] t ⇒ u) p α)))))
--- morph-is-equiv-inv-is-sec (r-whisk-equiv-morph-is-equiv f ([ ⋆ ] t ⇒ C) (t*-base .t .C)) =
---   lax-trans-nonzero-dim-iso {!   !}
--- morph-is-equiv-inv-is-sec (r-whisk-equiv-morph-is-equiv f ([ [ A ] x ⇒ y ] t ⇒ u) (t*-step p .t .u)) =
---   lax-trans-nonzero-dim-iso {!   !}
--- ```
