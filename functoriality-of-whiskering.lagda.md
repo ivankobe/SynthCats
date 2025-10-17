@@ -131,7 +131,7 @@ mutual
         ( base)
         ( r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) base u))
       ( base)
-      (Inv (r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) base t))
+      ( Inv (r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) base t))
   r-assoc-morph-inv g h ([ [ B' ] x ⇒ y ] t ⇒ u) (step (step p)) =
     precomp-morph
       ( postcomp-morph

@@ -1,5 +1,6 @@
 ```agda
 {-# OPTIONS --guardedness #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 open import Data.Product.Base
 
@@ -7,6 +8,8 @@ open import CaTT
 open import whiskering
 open import synthetic-categories
 open import type-morphisms
+open import type-equivalences
+open import whiskering-equivalences
 open import functoriality-of-whiskering
 open import terminal-category
 
@@ -34,9 +37,9 @@ module prod-intro
   postulate
     pair-prod : Tm A
   postulate
-    coh₁-prod : Tm ([ r-whisk-ty (pr₁-prod C D) A p ] f ⇒ r-whisk-tm (pr₁-prod C D) A p pair-prod)
+    coh₁-prod : Tm ([ r-whisk-ty (pr₁-prod C D) A p ] f ⇒ r-whisk-tm (pr₁-prod C D) pair-prod p)
   postulate 
-    coh₂-prod : Tm ([ r-whisk-ty (pr₂-prod C D) A p ] g ⇒ r-whisk-tm (pr₂-prod C D) A p pair-prod)
+    coh₂-prod : Tm ([ r-whisk-ty (pr₂-prod C D) A p ] g ⇒ r-whisk-tm (pr₂-prod C D) pair-prod p)
 
 open prod-intro public
 ```
@@ -56,44 +59,75 @@ module _
         (g : Tm (r-whisk-ty pr₂ A p)) → Tm A
       coh₁ : {A : Ty} → {p : t* A ≡ P} → (f : Tm (r-whisk-ty pr₁ A p)) →
         (g : Tm (r-whisk-ty pr₂ A p)) →
-          Tm ([ r-whisk-ty pr₁ A p ] f ⇒ r-whisk-tm pr₁ A p (pair f g))
+          Tm ([ r-whisk-ty pr₁ A p ] f ⇒ r-whisk-tm pr₁ (pair f g) p)
       coh₂ : {A : Ty} → {p : t* A ≡ P} → (f : Tm (r-whisk-ty pr₁ A p)) →
         (g : Tm (r-whisk-ty pr₂ A p)) →
-          Tm ([ r-whisk-ty pr₂ A p ] g ⇒ r-whisk-tm pr₂ A p (pair f g))
+          Tm ([ r-whisk-ty pr₂ A p ] g ⇒ r-whisk-tm pr₂ (pair f g) p)
+  
+  open is-prod public
 ```
 
 The standard product is a product.
 
 ```agda
 prod-is-prod : {C D : cat} → is-prod C D (prod C D)
-is-prod.pr₁ (prod-is-prod {C} {D}) = pr₁-prod C D
-is-prod.pr₂ (prod-is-prod {C} {D}) = pr₂-prod C D
-is-prod.pair prod-is-prod f g = pair-prod f g
-is-prod.coh₁ prod-is-prod f g = coh₁-prod f g
-is-prod.coh₂ prod-is-prod f g = coh₂-prod f g
+pr₁ (prod-is-prod {C} {D}) = pr₁-prod C D
+pr₂ (prod-is-prod {C} {D}) = pr₂-prod C D
+pair prod-is-prod f g = pair-prod f g
+coh₁ prod-is-prod f g = coh₁-prod f g
+coh₂ prod-is-prod f g = coh₂-prod f g
 ```
 
 Products are stable under equivalence.
 
 ```agda
-
 prod-stable-equiv : {C D P P' : cat} → equiv P P' → is-prod C D P → is-prod C D P'
-is-prod.pr₁ (prod-stable-equiv e p) = Comp (is-prod.pr₁ p) (equiv-sec-map e)
-is-prod.pr₂ (prod-stable-equiv e p) = Comp (is-prod.pr₂ p) (equiv-sec-map e)
-is-prod.pair (prod-stable-equiv e p) {A} {q} f g =
-  morph-base ( morph-r-unit _ A q)
-    ( morph-base (morph-r-transport (equiv-sec-is-sec e) A q)
-      ( morph-base (morph-r-assoc-inv (equiv-sec-map e) (equiv-map e) A q)
-        ( r-whisk-tm
-          ( equiv-map e)
-          ( r-whisk-ty (equiv-sec-map e) A q)
-          ( t*-r-whisk-ty (equiv-sec-map e) A q)
-          ( is-prod.pair p
-            ( morph-base (morph-r-assoc (equiv-sec-map e) (is-prod.pr₁ p) A q) f)
-            ( morph-base (morph-r-assoc (equiv-sec-map e) (is-prod.pr₂ p) A q) g)))))
-is-prod.coh₁ (prod-stable-equiv e p) {A} {q} f g = {!   !}
-is-prod.coh₂ (prod-stable-equiv e p) f g = {!   !}
-
+is-prod.pr₁ (prod-stable-equiv e p) = Comp (is-prod.pr₁ p) (equiv-map (equiv-inv e))
+is-prod.pr₂ (prod-stable-equiv e p) = Comp (is-prod.pr₂ p) (equiv-map (equiv-inv e))
+is-prod.pair (prod-stable-equiv e p) {[ A ] t ⇒ u} {q} f g =
+  ty-morph-base
+    ( ty-morph-is-equiv-inv-map ( r-whisk-equiv-ty-morph-is-equiv (equiv-inv e) ([ A ] t ⇒ u) (q)))
+    ( pair p
+      ( ty-morph-base (r-assoc-morph (equiv-sec-map e) (pr₁ p) _ q) f)
+      ( ty-morph-base (r-assoc-morph (equiv-sec-map e) (pr₂ p) _ q) g))
+coh₁ (prod-stable-equiv e p) {[ A ] t ⇒ u} {q} f g =
+  Comp
+    ( r-assoc-lax-trans-inv (equiv-map (equiv-inv e)) (pr₁ p) _ q _)
+    ( Comp
+      ( ty-morph-base
+        ( ty-morph-step (r-assoc-morph-inv ( equiv-map (equiv-inv e)) ( pr₁ p) _ q))
+        ( Comp
+          ( ty-morph-base
+            ( ty-morph-step (r-whisk-morph _ (t*-r-whisk-ty (equiv-map (equiv-inv e)) _ q) (pr₁ p)))
+            ( ty-morph-is-equiv-inv-is-sec-inv
+              ( r-whisk-morph _ q (equiv-map (equiv-inv e)))
+              ( r-whisk-equiv-ty-morph-is-equiv (equiv-inv e) _ q)
+              ( _)))
+          ( coh₁ p 
+            ( ty-morph-base (r-assoc-morph (equiv-sec-map e) (pr₁ p) _ q) f)
+            ( ty-morph-base (r-assoc-morph (equiv-sec-map e) (pr₂ p) _ q) g)))) 
+      ( ty-morph-is-equiv-inv-is-ret-map
+        ( r-assoc-morph (equiv-map (equiv-inv e)) (pr₁ p) _ q)
+        ( r-assoc-morph-is-equiv (equiv-map (equiv-inv e)) (pr₁ p) _ q) f))
+is-prod.coh₂ (prod-stable-equiv e p) {[ A ] t ⇒ u} {q} f g =
+  Comp
+    ( r-assoc-lax-trans-inv (equiv-map (equiv-inv e)) (pr₂ p) _ q _)
+    ( Comp
+      ( ty-morph-base
+        ( ty-morph-step (r-assoc-morph-inv ( equiv-map (equiv-inv e)) ( pr₂ p) _ q))
+        ( Comp
+          ( ty-morph-base
+            ( ty-morph-step (r-whisk-morph _ (t*-r-whisk-ty (equiv-map (equiv-inv e)) _ q) (pr₂ p)))
+            ( ty-morph-is-equiv-inv-is-sec-inv
+              ( r-whisk-morph _ q (equiv-map (equiv-inv e)))
+              ( r-whisk-equiv-ty-morph-is-equiv (equiv-inv e) _ q)
+              ( _)))
+          ( coh₂ p 
+            ( ty-morph-base (r-assoc-morph (equiv-sec-map e) (pr₁ p) _ q) f)
+            ( ty-morph-base (r-assoc-morph (equiv-sec-map e) (pr₂ p) _ q) g)))) 
+      ( ty-morph-is-equiv-inv-is-ret-map
+        ( r-assoc-morph (equiv-map (equiv-inv e)) (pr₂ p) _ q)
+        ( r-assoc-morph-is-equiv (equiv-map (equiv-inv e)) (pr₂ p) _ q) g))
 ```
 
 The formation of products is functorial in the second component, in the following sense.
@@ -121,8 +155,8 @@ mutual
 
   snd-prod-ty-tgt : (C : cat) → (A : Ty) → (t u : Tm A) →
     t* (snd-prod-ty C A t u) ≡ (prod C (tgt A t u))
-  snd-prod-ty-tgt C ⋆ D E = t*-base _ _
-  snd-prod-ty-tgt C ([ A ] x ⇒ y) t u = t*-step (snd-prod-ty-tgt C A x y) _ _
+  snd-prod-ty-tgt C ⋆ D E = base
+  snd-prod-ty-tgt C ([ A ] x ⇒ y) t u = step (snd-prod-ty-tgt C A x y)
 
   snd-prod-comm₁ : (C : cat) → (A : Ty) → (t u : Tm A) →
     Tm (r-whisk-ty (pr₁-prod C (tgt A t u)) (snd-prod-ty C A t u) (snd-prod-ty-tgt C A t u))
@@ -155,13 +189,13 @@ mutual
   snd-prod-iso₁ : (C : cat) → (A : Ty) → (t u : Tm A) → (α : Tm ([ A ] t ⇒ u)) →
     Tm ([ _ ]
         snd-prod-comm₁ C A t u ⇒
-        r-whisk-tm (pr₁-prod C _) _ (snd-prod-ty-tgt C A t u) (snd-prod-tm C A t u α))
+        r-whisk-tm (pr₁-prod C _) (snd-prod-tm C A t u α) (snd-prod-ty-tgt C A t u))
   snd-prod-iso₁ C A t u α = coh₁-prod (snd-prod-comm₁ C A t u) (snd-prod-comm₂ C A t u α)
 
   snd-prod-iso₂ : (C : cat) → (A : Ty) → (t u : Tm A) → (α : Tm ([ A ] t ⇒ u)) →
     Tm ([ _ ]
         snd-prod-comm₂ C A t u α ⇒
-        r-whisk-tm (pr₂-prod C (tgt A t u)) _ (snd-prod-ty-tgt C A t u) (snd-prod-tm C A t u α))
+        r-whisk-tm (pr₂-prod C (tgt A t u)) (snd-prod-tm C A t u α) (snd-prod-ty-tgt C A t u))
   snd-prod-iso₂ C A t u α = coh₂-prod _ _
 
 mutual
@@ -177,8 +211,8 @@ mutual
 
   fst-prod-ty-tgt : (C : cat) → (A : Ty) → (t u : Tm A) →
     t* (fst-prod-ty C A t u) ≡ (prod (tgt A t u) C)
-  fst-prod-ty-tgt C ⋆ D E = t*-base _ _
-  fst-prod-ty-tgt C ([ A ] x ⇒ y) t u = t*-step (fst-prod-ty-tgt C A x y) _ _
+  fst-prod-ty-tgt C ⋆ D E = base
+  fst-prod-ty-tgt C ([ A ] x ⇒ y) t u = step (fst-prod-ty-tgt C A x y)
 
   fst-prod-comm₂ : (C : cat) → (A : Ty) → (t u : Tm A) →
     Tm (r-whisk-ty (pr₂-prod (tgt A t u) C) (fst-prod-ty C A t u) (fst-prod-ty-tgt C A t u))
@@ -211,13 +245,13 @@ mutual
   fst-prod-iso₂ : (C : cat) → (A : Ty) → (t u : Tm A) → (α : Tm ([ A ] t ⇒ u)) →
     Tm ([ _ ]
         fst-prod-comm₂ C A t u ⇒
-        r-whisk-tm (pr₂-prod _ C) _ (fst-prod-ty-tgt C A t u) (fst-prod-tm C A t u α))
+        r-whisk-tm (pr₂-prod _ C) (fst-prod-tm C A t u α) (fst-prod-ty-tgt C A t u))
   fst-prod-iso₂ C A t u α = coh₂-prod _ _
 
   fst-prod-iso₁ : (C : cat) → (A : Ty) → (t u : Tm A) → (α : Tm ([ A ] t ⇒ u)) →
     Tm ([ _ ]
         fst-prod-comm₁ C A t u α ⇒
-        r-whisk-tm (pr₁-prod (tgt A t u) C) _ (fst-prod-ty-tgt C A t u) (fst-prod-tm C A t u α))
+        r-whisk-tm (pr₁-prod (tgt A t u) C) (fst-prod-tm C A t u α) (fst-prod-ty-tgt C A t u))
   fst-prod-iso₁ C A t u α = coh₁-prod _ _
 ```
 
@@ -226,11 +260,10 @@ For a type A : Ty and a cat D with t* A ≡ D, we have t* (C × A) ≡ C × D.
 ```agda
 t*-fst-prod : (C D : cat) → (A : Ty) → (p : t* A ≡ D) →
   t* fst-prod-ty C (∂ₜ A p) (∂ₜ⁻ A p) (∂ₜ⁺ A p) ≡ prod D C
-t*-fst-prod C D ([ .⋆ ] x ⇒ .D) (t*-base .x .D) = t*-base _ _
-t*-fst-prod C D ([ [ .⋆ ] t ⇒ .D ] x ⇒ y) (t*-step (t*-base .t .D) .x .y) =
-  t*-step (t*-base _ _) _ _
-t*-fst-prod C D ([ [ A ] t ⇒ u ] x ⇒ y) (t*-step (t*-step p .t .u) .x .y) =
-  t*-step (t*-fst-prod C D ([ A ] t ⇒ u) (t*-step p t u)) _ _
+t*-fst-prod C D ([ .⋆ ] x ⇒ .D) base = base
+t*-fst-prod C D ([ [ .⋆ ] t ⇒ .D ] x ⇒ y) (step base) = step base
+t*-fst-prod C D ([ [ A ] t ⇒ u ] x ⇒ y) (step (step p)) =
+  step (t*-fst-prod C D ([ A ] t ⇒ u) (step p))
 ```
 
 By the universal property of the product, a pair of functors f : C → D, g : C' → D' gives rise to
@@ -240,7 +273,7 @@ a functor f × g : C × C' → D × D'.
 prod-fun : {C D C' D' : cat} → fun C D  → fun C' D' → fun (prod C C') (prod D D')
 prod-fun {C} {D} {C'} {D'} f g =
   pair-prod
-    { p = t*-base (prod C C') (prod D D')}
+    { p = base}
     ( Comp f (pr₁-prod C C'))
     ( Comp g (pr₂-prod C C'))
 ```
@@ -254,7 +287,7 @@ prod-fun-ext :
   nat-iso (Comp (pr₁-prod C D) f) (Comp (pr₁-prod C D) g) →
   nat-iso (Comp (pr₂-prod C D) f) (Comp (pr₂-prod C D) g) →
     nat-iso f g
-prod-fun-ext φ ψ = pair-prod {p = t*-step (t*-base _ _) _ _} φ ψ
+prod-fun-ext φ ψ = pair-prod {p = step base} φ ψ
 ```
 
 The terminal category is the unit for taking products in the second component. 
@@ -263,65 +296,65 @@ The terminal category is the unit for taking products in the second component.
 trmn-cat-prod-r-unit-equiv : (C : cat) → equiv (prod C trmn-cat) C
 equiv-map (trmn-cat-prod-r-unit-equiv C) = pr₁-prod C trmn-cat
 sec-map (equiv-sec (trmn-cat-prod-r-unit-equiv C)) =
-  pair-prod {p = t*-base _ _} (Id C) (trmn-cat-proj-cat C)
-sec-is-sec (equiv-sec (trmn-cat-prod-r-unit-equiv C)) = Inv (coh₁-prod (Id C) (trmn-cat-proj-cat C))
+  pair-prod {p = base} (Id C) (trmn-cat-proj-cat C)
+is-sec (equiv-sec (trmn-cat-prod-r-unit-equiv C)) = Inv (coh₁-prod (Id C) (trmn-cat-proj-cat C))
 ret-map (equiv-ret (trmn-cat-prod-r-unit-equiv C)) =
   sec-map (equiv-sec (trmn-cat-prod-r-unit-equiv C))
-ret-is-ret (equiv-ret (trmn-cat-prod-r-unit-equiv C)) =
+is-ret (equiv-ret (trmn-cat-prod-r-unit-equiv C)) =
   Inv ( prod-fun-ext
     ( Comp
       ( Comp (Inv (Assoc _ _ _)) (l-whisk-fun _ (coh₁-prod _ _)))
-      ( Comp (Inv (left-unit-law _)) (right-unit-law _)))
+      ( Comp (Inv (Left-unit-law _)) (Right-unit-law _)))
     ( trmn-cat-proj
       ( [ _ ] (Comp (pr₂-prod C trmn-cat) (Id (prod C trmn-cat))) ⇒
               (Comp
                 ( pr₂-prod C trmn-cat)
                 ( Comp (pair-prod (Id C) (trmn-cat-proj-cat C)) (pr₁-prod C trmn-cat))))
-      { t*-step (t*-base _ _) _ _}) )
+      ( step base)) )
 ```
 
 Products are symmetric.
 
 ```agda
 prod-symm : (C D : cat) → equiv (prod C D) (prod D C)
-equiv-map (prod-symm C D) = pair-prod {p = t*-base _ _} (pr₂-prod C D) (pr₁-prod C D)
-sec-map (equiv-sec (prod-symm C D)) = pair-prod {p = t*-base _ _} (pr₂-prod D C) (pr₁-prod D C)
-sec-is-sec (equiv-sec (prod-symm C D)) =
+equiv-map (prod-symm C D) = pair-prod {p = base} (pr₂-prod C D) (pr₁-prod C D)
+sec-map (equiv-sec (prod-symm C D)) = pair-prod {p = base} (pr₂-prod D C) (pr₁-prod D C)
+is-sec (equiv-sec (prod-symm C D)) =
   prod-fun-ext
     ( Comp
-      ( Inv (right-unit-law (pr₁-prod D C)))
+      ( Inv (Right-unit-law (pr₁-prod D C)))
       ( Comp
-        ( Inv (coh₂-prod {p = t*-base _ _}(pr₂-prod D C) (pr₁-prod D C)))
+        ( Inv (coh₂-prod {p = base}(pr₂-prod D C) (pr₁-prod D C)))
         ( Comp
-          ( l-whisk-fun (pair-prod {p = t*-base _ _} (pr₂-prod D C) (pr₁-prod D C))
-            ( Inv (coh₁-prod {p = t*-base _ _} (pr₂-prod C D) (pr₁-prod C D))))
+          ( l-whisk-fun (pair-prod {p = base} (pr₂-prod D C) (pr₁-prod D C))
+            ( Inv (coh₁-prod {p = base} (pr₂-prod C D) (pr₁-prod C D))))
           ( Assoc _ _ _))))
     ( Comp
-      ( Inv (right-unit-law (pr₂-prod D C)))
+      ( Inv (Right-unit-law (pr₂-prod D C)))
       ( Comp
-        ( Inv (coh₁-prod {p = t*-base _ _} (pr₂-prod D C) (pr₁-prod D C)))
+        ( Inv (coh₁-prod {p = base} (pr₂-prod D C) (pr₁-prod D C)))
         ( Comp
-          ( l-whisk-fun (pair-prod {p = t*-base _ _} (pr₂-prod D C) (pr₁-prod D C))
-            ( Inv (coh₂-prod {p = t*-base _ _} (pr₂-prod C D) (pr₁-prod C D))))
+          ( l-whisk-fun (pair-prod {p = base} (pr₂-prod D C) (pr₁-prod D C))
+            ( Inv (coh₂-prod {p = base} (pr₂-prod C D) (pr₁-prod C D))))
           ( Assoc _ _ _))))
 ret-map (equiv-ret (prod-symm C D)) = sec-map (equiv-sec (prod-symm C D))
-ret-is-ret (equiv-ret (prod-symm C D)) =
+is-ret (equiv-ret (prod-symm C D)) =
   prod-fun-ext
     ( Comp
-      ( Inv (right-unit-law (pr₁-prod C D)))
+      ( Inv (Right-unit-law (pr₁-prod C D)))
       ( Comp
-        ( Inv (coh₂-prod {p = t*-base _ _} (pr₂-prod C D) (pr₁-prod C D)))
+        ( Inv (coh₂-prod {p = base} (pr₂-prod C D) (pr₁-prod C D)))
         ( Comp
           ( l-whisk-fun (pair-prod (pr₂-prod C D) (pr₁-prod C D))
-            ( Inv (coh₁-prod {p = t*-base _ _} (pr₂-prod D C) (pr₁-prod D C))))
+            ( Inv (coh₁-prod {p = base} (pr₂-prod D C) (pr₁-prod D C))))
           ( Assoc _ _ _))))
     ( Comp
-      ( Inv (right-unit-law (pr₂-prod C D)))
+      ( Inv (Right-unit-law (pr₂-prod C D)))
       ( Comp
-        ( Inv (coh₁-prod {p = t*-base _ _} (pr₂-prod C D) (pr₁-prod C D)))
+        ( Inv (coh₁-prod {p = base} (pr₂-prod C D) (pr₁-prod C D)))
         ( Comp
           ( l-whisk-fun (pair-prod (pr₂-prod C D) (pr₁-prod C D))
-            ( Inv (coh₂-prod {p = t*-base _ _} (pr₂-prod D C) (pr₁-prod D C))))
+            ( Inv (coh₂-prod {p = base} (pr₂-prod D C) (pr₁-prod D C))))
           ( Assoc _ _ _))))
 ```
 

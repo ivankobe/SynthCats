@@ -1,5 +1,6 @@
 ```agda
 {-# OPTIONS --guardedness #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 open import CaTT
 open import whiskering
@@ -25,14 +26,51 @@ r-whisk-morph-id-is-equiv {C} .( [ _ ] _ ⇒ _ ) (step p) = record
   ; ty-morph-is-equiv-inv-is-sec = lax-trans-iso (λ α → r-unit-lax-trans-inv C _ (step p) α)
   ; ty-morph-is-equiv-inv-is-ret = lax-trans-iso (λ α → Inv (r-unit-lax-trans C _ (step p) α))
   }
+```
+
+A helper datatype.
+
+```agda
+record ty-morph-is-equiv-w-inv {A B : Ty} (map : ty-morph A B) (inv : ty-morph B A) : Set where
+  field
+    ty-morph-is-equiv-w-inv-is-sec :
+      lax-iso (ty-morph-comp map inv) (id-ty-morph B)
+    ty-morph-is-equiv-w-inv-is-ret :
+      lax-iso (id-ty-morph A) (ty-morph-comp inv map)
+
+open ty-morph-is-equiv-w-inv
+
+ty-morph-is-equiv-of-equiv-w-inv : {A B : Ty} {map : ty-morph A B} {inv : ty-morph B A} →
+  ty-morph-is-equiv-w-inv map inv → ty-morph-is-equiv map
+ty-morph-is-equiv-of-equiv-w-inv {map = map} {inv} P = record
+  { ty-morph-is-equiv-inv-map = inv
+  ; ty-morph-is-equiv-inv-is-sec = ty-morph-is-equiv-w-inv-is-sec P
+  ; ty-morph-is-equiv-inv-is-ret = ty-morph-is-equiv-w-inv-is-ret P
+  }
+```
+
+```
+postulate
+  r-assoc-morph-is-equiv' : {B : Ty} {D E F : Tm B} →
+    (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) → (B' : Ty) → (p : t* B' ≡ D) →
+      ty-morph-is-equiv-w-inv (r-assoc-morph g h B' p) (r-assoc-morph-inv g h B' p)
+
+r-assoc-morph-is-equiv : {B : Ty} {D E F : Tm B} →
+  (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) → (B' : Ty) → (p : t* B' ≡ D) →
+    ty-morph-is-equiv (r-assoc-morph g h B' p)
+r-assoc-morph-is-equiv g h B' p =
+  ty-morph-is-equiv-of-equiv-w-inv (r-assoc-morph-is-equiv' g h B' p)
 
 postulate
-  r-assoc-morph-is-equiv : {B : Ty} {D E F : Tm B} → (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
-      (B' : Ty) → (p : t* B' ≡ D) → ty-morph-is-equiv (r-assoc-morph g h B' p)
+  r-transport-morph-is-equiv' : {B : Ty} {D E : Tm B}
+    {g g' : Tm ([ B ] D ⇒ E)} → (β : Tm ([ _ ] g ⇒ g')) → (B' : Ty) → (p : t* B' ≡ D) →
+      ty-morph-is-equiv-w-inv (r-transport-morph β B' p) (r-transport-morph (Inv β) B' p)
 
-postulate
-  r-transport-morph-is-equiv : {B : Ty} {D E : Tm B}  {g g' : Tm ([ B ] D ⇒ E)} (β : Tm ([ _ ] g ⇒ g')) →
-    (B' : Ty) → (p : t* B' ≡ D) → ty-morph-is-equiv (r-transport-morph β B' p)
+r-transport-morph-is-equiv : {B : Ty} {D E : Tm B}
+  {g g' : Tm ([ B ] D ⇒ E)} → (β : Tm ([ _ ] g ⇒ g')) → (B' : Ty) → (p : t* B' ≡ D) →
+      ty-morph-is-equiv (r-transport-morph β B' p)
+r-transport-morph-is-equiv β B' p =
+  ty-morph-is-equiv-of-equiv-w-inv (r-transport-morph-is-equiv' β B' p)
 
 r-whisk-equiv-ty-morph-is-equiv-iso : {C D : cat} (f : equiv C D) → (A : Ty) → (p : t* A ≡ C) →
   lax-iso
@@ -44,7 +82,13 @@ r-whisk-equiv-ty-morph-is-equiv-iso : {C D : cat} (f : equiv C D) → (A : Ty) �
     ( ty-morph-comp
       ( r-whisk-morph _ (t*-r-whisk-ty (equiv-map f) A p) (equiv-sec-map f))
       ( r-whisk-morph A p (equiv-map f)))
-r-whisk-equiv-ty-morph-is-equiv-iso f ([ .⋆ ] t ⇒ u) base = lax-trans-iso {!   !}
+r-whisk-equiv-ty-morph-is-equiv-iso f ([ .⋆ ] t ⇒ u) base =
+  lax-trans-iso
+    λ α → Inv 
+      ( Comp
+        ( ty-morph-base (ty-morph-step (r-assoc-morph α (Id u) ([ ⋆ ] t ⇒ t) base))
+          ( Inv ( r-transport-lax-trans (Inv (equiv-sec-is-ret f)) _ base α)))
+        ( Inv (r-assoc-lax-trans (equiv-map f) (equiv-sec-map f) _ base α)))
 r-whisk-equiv-ty-morph-is-equiv-iso f ([ A ] t ⇒ u) (step p) =
   lax-trans-iso
     λ α → Inv 
