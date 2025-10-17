@@ -1,14 +1,12 @@
 ```agda
 {-# OPTIONS --guardedness #-}
 
-open import CaTT
-open import whiskering
--- open import synthetic-categories
-open import type-morphisms
-open import lax-transformations
--- open import functoriality-of-whiskering
+open import CaTT.CaTT
+open import CaTT.whiskering
+open import CaTT.type-morphisms
+open import CaTT.lax-transformations
 
-module type-equivalences where
+module CaTT.type-equivalences where
 ```
 
 A type morphism φ : A ⇝ B is an *equivalence* if there is a type morphism ψ : B ⇝ A together with

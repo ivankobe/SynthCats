@@ -3,7 +3,7 @@ open import Data.Nat
 ```
 
 ```agda
-module CaTT where
+module CaTT.CaTT where
 ```
 
 The type theory CaTT (cf. https://arxiv.org/abs/2106.04475) is implemented as a type Ty of types

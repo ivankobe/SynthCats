@@ -1,12 +1,11 @@
 ```agda
 {-# OPTIONS --guardedness #-}
-{-# OPTIONS --allow-unsolved-metas #-}
 
-open import CaTT
-open import whiskering
-open import type-morphisms
+open import CaTT.CaTT
+open import CaTT.whiskering
+open import CaTT.type-morphisms
 
-module lax-transformations where
+module CaTT.lax-transformations where
 ```
 
 A pointwise homotopy Φ between type morphisms φ ψ : A ⇝ B is given by a term Φ a : [ B ] φ a ⇒ ψ a

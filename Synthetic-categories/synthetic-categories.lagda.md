@@ -1,14 +1,13 @@
 ```agda
 {-# OPTIONS --guardedness #-}
-{-# OPTIONS --allow-unsolved-metas #-}
 
 open import Data.Product.Base
 open import Agda.Builtin.Sigma
 
-open import CaTT
-open import whiskering
+open import CaTT.CaTT
+open import CaTT.whiskering
 
-module synthetic-categories where
+module Synthetic-categories.synthetic-categories where
 ```
 
 We want to think of terms of the base type ⋆ as synthetic categories, of terms of type [ ⋆ ] C ⇒ D

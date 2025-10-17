@@ -1,14 +1,13 @@
 ```agda
 {-# OPTIONS --guardedness #-}
-{-# OPTIONS --allow-unsolved-metas #-}
 
-open import CaTT
-open import whiskering
-open import type-morphisms
-open import functoriality-of-whiskering
-open import synthetic-categories
+open import CaTT.CaTT
+open import CaTT.whiskering
+open import CaTT.type-morphisms
+open import CaTT.functoriality-of-whiskering
+open import Synthetic-categories.synthetic-categories
 
-module terminal-category where
+module Constructions.terminal-category where
 ```
 
 We postulate the existence of a terminal category.

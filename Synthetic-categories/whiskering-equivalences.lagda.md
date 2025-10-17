@@ -2,15 +2,15 @@
 {-# OPTIONS --guardedness #-}
 {-# OPTIONS --allow-unsolved-metas #-}
 
-open import CaTT
-open import whiskering
-open import functoriality-of-whiskering
-open import type-morphisms
-open import lax-transformations
-open import type-equivalences
-open import synthetic-categories
+open import CaTT.CaTT
+open import CaTT.whiskering
+open import CaTT.functoriality-of-whiskering
+open import CaTT.type-morphisms
+open import CaTT.lax-transformations
+open import CaTT.type-equivalences
+open import Synthetic-categories.synthetic-categories
 
-module whiskering-equivalences where
+module Synthetic-categories.whiskering-equivalences where
 ```
 
 ```agda

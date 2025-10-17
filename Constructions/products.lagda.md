@@ -1,19 +1,18 @@
 ```agda
 {-# OPTIONS --guardedness #-}
-{-# OPTIONS --allow-unsolved-metas #-}
 
 open import Data.Product.Base
 
-open import CaTT
-open import whiskering
-open import synthetic-categories
-open import type-morphisms
-open import type-equivalences
-open import whiskering-equivalences
-open import functoriality-of-whiskering
-open import terminal-category
+open import CaTT.CaTT
+open import CaTT.whiskering
+open import CaTT.type-morphisms
+open import CaTT.type-equivalences
+open import CaTT.functoriality-of-whiskering
+open import Synthetic-categories.synthetic-categories
+open import Synthetic-categories.whiskering-equivalences
+open import Constructions.terminal-category
 
-module products where
+module Constructions.products where
 ```
 
 We postulate the existence of products of synthetic categories.
@@ -81,16 +80,16 @@ coh₂ prod-is-prod f g = coh₂-prod f g
 Products are stable under equivalence.
 
 ```agda
-prod-stable-equiv : {C D P P' : cat} → equiv P P' → is-prod C D P → is-prod C D P'
-is-prod.pr₁ (prod-stable-equiv e p) = Comp (is-prod.pr₁ p) (equiv-map (equiv-inv e))
-is-prod.pr₂ (prod-stable-equiv e p) = Comp (is-prod.pr₂ p) (equiv-map (equiv-inv e))
-is-prod.pair (prod-stable-equiv e p) {[ A ] t ⇒ u} {q} f g =
+prod-stable-equiv' : {C D P P' : cat} → equiv P P' → is-prod C D P → is-prod C D P'
+is-prod.pr₁ (prod-stable-equiv' e p) = Comp (is-prod.pr₁ p) (equiv-map (equiv-inv e))
+is-prod.pr₂ (prod-stable-equiv' e p) = Comp (is-prod.pr₂ p) (equiv-map (equiv-inv e))
+is-prod.pair (prod-stable-equiv' e p) {[ A ] t ⇒ u} {q} f g =
   ty-morph-base
     ( ty-morph-is-equiv-inv-map ( r-whisk-equiv-ty-morph-is-equiv (equiv-inv e) ([ A ] t ⇒ u) (q)))
     ( pair p
       ( ty-morph-base (r-assoc-morph (equiv-sec-map e) (pr₁ p) _ q) f)
       ( ty-morph-base (r-assoc-morph (equiv-sec-map e) (pr₂ p) _ q) g))
-coh₁ (prod-stable-equiv e p) {[ A ] t ⇒ u} {q} f g =
+coh₁ (prod-stable-equiv' e p) {[ A ] t ⇒ u} {q} f g =
   Comp
     ( r-assoc-lax-trans-inv (equiv-map (equiv-inv e)) (pr₁ p) _ q _)
     ( Comp
@@ -109,7 +108,7 @@ coh₁ (prod-stable-equiv e p) {[ A ] t ⇒ u} {q} f g =
       ( ty-morph-is-equiv-inv-is-ret-map
         ( r-assoc-morph (equiv-map (equiv-inv e)) (pr₁ p) _ q)
         ( r-assoc-morph-is-equiv (equiv-map (equiv-inv e)) (pr₁ p) _ q) f))
-is-prod.coh₂ (prod-stable-equiv e p) {[ A ] t ⇒ u} {q} f g =
+is-prod.coh₂ (prod-stable-equiv' e p) {[ A ] t ⇒ u} {q} f g =
   Comp
     ( r-assoc-lax-trans-inv (equiv-map (equiv-inv e)) (pr₂ p) _ q _)
     ( Comp
@@ -128,6 +127,9 @@ is-prod.coh₂ (prod-stable-equiv e p) {[ A ] t ⇒ u} {q} f g =
       ( ty-morph-is-equiv-inv-is-ret-map
         ( r-assoc-morph (equiv-map (equiv-inv e)) (pr₂ p) _ q)
         ( r-assoc-morph-is-equiv (equiv-map (equiv-inv e)) (pr₂ p) _ q) g))
+
+prod-stable-equiv : {C D P P' : cat} → equiv P' P → is-prod C D P → is-prod C D P'
+prod-stable-equiv e p = prod-stable-equiv' (equiv-inv e) p
 ```
 
 The formation of products is functorial in the second component, in the following sense.

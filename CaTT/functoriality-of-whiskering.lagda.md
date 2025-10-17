@@ -1,14 +1,14 @@
 ```agda
 {-# OPTIONS --guardedness #-}
 
-open import CaTT
-open import whiskering
-open import type-morphisms
-open import lax-transformations
+open import CaTT.CaTT
+open import CaTT.whiskering
+open import CaTT.type-morphisms
+open import CaTT.lax-transformations
 ```
 
 ```agda
-module functoriality-of-whiskering where
+module CaTT.functoriality-of-whiskering where
 ```
 
 The operation of right (left) whiskering is functorial in the following sense.

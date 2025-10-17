@@ -3,10 +3,10 @@
 
 open import Function.Base
 
-open import CaTT
-open import whiskering
+open import CaTT.CaTT
+open import CaTT.whiskering
 
-module type-morphisms where
+module CaTT.type-morphisms where
 ```
 
 Given types A B : Ty, a *type morphism* φ from A to B consists of the following data:

@@ -1,12 +1,10 @@
 ```agda
-{-# OPTIONS --allow-unsolved-metas #-}
-
-open import CaTT
+open import CaTT.CaTT
 open import Agda.Builtin.Equality
 ```
 
 ```agda
-module whiskering where
+module CaTT.whiskering where
 ```
 
 The right/left whiskering of a type/term by a term. The right whiskering is constructed as follows.
