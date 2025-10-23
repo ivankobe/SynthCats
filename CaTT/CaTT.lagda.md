@@ -18,6 +18,14 @@ mutual
   postulate Tm : Ty → Set
 ```
 
+```agda
+arrty : {A : Ty} (t u : Tm A) → Ty
+arrty t u = [ _ ] t ⇒ u
+
+arr : {A : Ty} (t u : Tm A) → Set
+arr t u = Tm (arrty t u)
+```
+
 Coherences, as for example identities and inverses below, can be assumed on ad hoc using agda's
 postulates. Every coherence assumed rests on a pen-and-paper derivation in CaTT.
 

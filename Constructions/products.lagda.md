@@ -81,9 +81,9 @@ Products are stable under equivalence.
 
 ```agda
 prod-stable-equiv' : {C D P P' : cat} → equiv P P' → is-prod C D P → is-prod C D P'
-is-prod.pr₁ (prod-stable-equiv' e p) = Comp (is-prod.pr₁ p) (equiv-map (equiv-inv e))
-is-prod.pr₂ (prod-stable-equiv' e p) = Comp (is-prod.pr₂ p) (equiv-map (equiv-inv e))
-is-prod.pair (prod-stable-equiv' e p) {[ A ] t ⇒ u} {q} f g =
+pr₁ (prod-stable-equiv' e p) = Comp (pr₁ p) (equiv-map (equiv-inv e))
+pr₂ (prod-stable-equiv' e p) = Comp (pr₂ p) (equiv-map (equiv-inv e))
+pair (prod-stable-equiv' e p) {[ A ] t ⇒ u} {q} f g =
   ty-morph-base
     ( ty-morph-is-equiv-inv-map ( r-whisk-equiv-ty-morph-is-equiv (equiv-inv e) ([ A ] t ⇒ u) (q)))
     ( pair p
@@ -108,7 +108,7 @@ coh₁ (prod-stable-equiv' e p) {[ A ] t ⇒ u} {q} f g =
       ( ty-morph-is-equiv-inv-is-ret-map
         ( r-assoc-morph (equiv-map (equiv-inv e)) (pr₁ p) _ q)
         ( r-assoc-morph-is-equiv (equiv-map (equiv-inv e)) (pr₁ p) _ q) f))
-is-prod.coh₂ (prod-stable-equiv' e p) {[ A ] t ⇒ u} {q} f g =
+coh₂ (prod-stable-equiv' e p) {[ A ] t ⇒ u} {q} f g =
   Comp
     ( r-assoc-lax-trans-inv (equiv-map (equiv-inv e)) (pr₂ p) _ q _)
     ( Comp

@@ -25,17 +25,25 @@ mutual
   postulate
       r-whisk-tm : {B : Ty} {D E : Tm B} {A : Ty} (g : Tm ([ B ] D ⇒ E)) →
                     (α : Tm A) → (p : t* A ≡ D) → Tm (r-whisk-ty g A p)
+```
 
+```agda
 mutual
 
   l-whisk-ty : {B : Ty} {C D : Tm B} → (f : Tm ([ B ] C ⇒ D)) → (A : Ty) → s* A ≡ D → Ty
   l-whisk-ty {B = B} {C} {_} f ([ _ ] _ ⇒ E) base = [ B ] C ⇒ E
   l-whisk-ty f ([ A ] t ⇒ u) (step p) =
     [ l-whisk-ty f A p ] l-whisk-tm f t p ⇒ l-whisk-tm f u p
+    
+  postulate 
+    l-whisk-tm' : {B : Ty} {C D : Tm B} {A : Ty} {a a' : Tm A}
+      (f : Tm ([ B ] C ⇒ D)) → (α : Tm ([ A ] a ⇒ a')) → (p : s* ([ A ] a ⇒ a') ≡ D) →
+        Tm (l-whisk-ty f ([ A ] a ⇒ a') p)
 
-  postulate
-    l-whisk-tm : {B : Ty} {C D : Tm B} {A : Ty} (f : Tm ([ B ] C ⇒ D)) →
-      (α : Tm A) → (p : s* A ≡ D) → Tm (l-whisk-ty f A p)
+  l-whisk-tm : {B : Ty} {C D : Tm B} {A : Ty}
+      (f : Tm ([ B ] C ⇒ D)) → (α : Tm A) → (p : s* A ≡ D) → Tm (l-whisk-ty f A p)
+  l-whisk-tm {B} {A = .([ B ] _ ⇒ _)} f α base = r-whisk-tm α f base
+  l-whisk-tm {B} {A = .([ _ ] _ ⇒ _)} f α (step p) = l-whisk-tm' f α (step p)
 ```
 
 Whenever we can right-whisker a type A by a term g : [ B ] D ⇒ E, we have t* (g ⋆ A) ≡ E. Dually,
@@ -53,22 +61,20 @@ s*-l-whisk-ty {C = C} _ _ base = base
 s*-l-whisk-ty f ([ A ] t ⇒ u) (step p) = step (s*-l-whisk-ty f A p)
 ```
 
-The codimension-1 composition _∘_ is obtained as a special case of whiskering. Due to the
-implementation details, we had make a non-canonical choice: We defined the codimension-1 composition
-as a special case of *right* whiskering, but we could also have defined it using left whiskering. In
-CaTT, the same pasting context is used in both cases, so no choice has to be made. The workaround is
-to assume a (propositional) equality between both composites.
+The codimension-1 composition _∘_ is obtained as a special case of whiskering. Since in the case of
+whiskering a 1-cell by a 1-cell, the left and the right whiskering are definitionally equal (as is
+the case in CaTT), it doesn't matter which of the two definitions we use
 
 ```agda
 Comp : {A : Ty} {t u v : Tm A} → Tm ([ A ] u ⇒ v) → Tm ([ A ] t ⇒ u) → Tm ([ A ] t ⇒ v)
-Comp {A} {t} {u} g f = r-whisk-tm g f base
+Comp {A} {t} {u} {∨} g f = r-whisk-tm {A} {u} {∨} {[ A ] t ⇒ u} g f base
 
 Comp' : {A : Ty} {t u v : Tm A} → Tm ([ A ] u ⇒ v) → Tm ([ A ] t ⇒ u) → Tm ([ A ] t ⇒ v)
-Comp' {A} {t} {u} {v} g f = l-whisk-tm f g base
+Comp' {A} {t} {u} g f = l-whisk-tm f g base
 
-postulate
-  Comp-coh : {A : Ty} {t u v : Tm A} → (g : Tm ([ A ] u ⇒ v)) → (f : Tm ([ A ] t ⇒ u)) →
-    Comp g f ≡ Comp' g f
+Comp-Eq : {A : Ty} {t u v : Tm A} → (g : Tm ([ A ] u ⇒ v)) → (f : Tm ([ A ] t ⇒ u)) →
+  Comp g f ≡ Comp' g f
+Comp-Eq g f = refl
 ```
 
 Composition is unital and associative.

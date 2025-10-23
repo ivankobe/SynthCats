@@ -18,10 +18,16 @@ cat : Set
 cat = Tm ⋆
 
 fun : (C D : cat) → Set
-fun C D = Tm ([ ⋆ ] C ⇒ D)
+fun C D = Tm ([ _ ] C ⇒ D)
 
 nat-iso : {C D : cat} (F G : fun C D) → Set
-nat-iso {C} {D} F G = Tm ([ [ ⋆ ] C ⇒ D ] F ⇒ G)
+nat-iso {C} {D} F G = Tm ([ _ ] F ⇒ G)
+
+3-iso : {C D : cat} {F G : fun C D} (α β : nat-iso F G) → Set
+3-iso α β = Tm ([ _ ] α ⇒ β)
+
+4-iso : {C D : cat} {F G : fun C D} {α β : nat-iso F G} (φ ψ : 3-iso α β) → Set
+4-iso φ ψ = Tm ([ _ ] φ ⇒ ψ)
 ```
 
 Whiskering of a natural isomorphism by a functor.
@@ -33,8 +39,7 @@ r-whisk-fun g φ = r-whisk-tm g φ (step base)
 
 l-whisk-fun : {C D E : cat} {g g' : fun D E} → (f : fun C D) → nat-iso g g' →
   nat-iso (Comp g f) (Comp g' f)
-l-whisk-fun {C} {D} {E} {g} {g'} f ψ rewrite Comp-coh g f rewrite Comp-coh g' f =
-    l-whisk-tm f ψ (step base)
+l-whisk-fun {C} {D} {E} {g} {g'} f ψ = l-whisk-tm f ψ (step base)
 ```
 
 A section of a functor f : C → D is given by a functor s : D → C together with a natural isomorphism

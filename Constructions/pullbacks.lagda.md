@@ -2,9 +2,11 @@
 {-# OPTIONS --guardedness #-}
 
 open import CaTT.CaTT
+open import CaTT.commutative-squares-pasting
 open import CaTT.type-morphisms
 open import CaTT.whiskering
 open import CaTT.functoriality-of-whiskering
+open import CaTT.commutative-squares-pasting
 open import Synthetic-categories.synthetic-categories
 
 module Constructions.pullbacks where
@@ -124,7 +126,7 @@ The predicate of a cone being a pullback
 
 ```agda
 module _
-  {C D E : cat} (f : fun C E) (g : fun D E)
+  {C D E : cat} {f : fun C E} {g : fun D E}
   where
 
   record is-pb (c : cone f g) : Set where
@@ -145,6 +147,177 @@ module _
         (A : Ty) → (p : t* A ≡ (cone-apex c)) → (t₁ : Tm (r-whisk-ty (cone-fst c) A p)) →
         (t₂ : Tm (r-whisk-ty (cone-snd c) A p)) → (coh : Tm (coh-pb-ty c p t₁ t₂)) → 
           Tm (coh₃-pb-ty A c p t₁ t₂ coh (pair A p t₁ t₂ coh) (coh₁ A p t₁ t₂ _) (coh₂ A p t₁ t₂ _))
+
+pb-cone : {C D E : cat} (f : fun C E) → (g : fun D E) → is-pb (pb f g)
+pb-cone f g = record {
+  pair = pair-pb ;
+  coh₁ = coh₁-pb ;
+  coh₂ = coh₂-pb ;
+  coh₃ = coh₃-pb }
 ```
 
-Pullbacks are stable under equivalence.
+The datatype of cone diagrams, of isos of cone diagrams, and of isos of those isos.
+
+```agda
+module _
+  {C D E : cat} (f : fun C E) (g : fun D E) (T : cat)
+  where
+
+  record cone-diagram : Set where
+    field
+      cone-diagram-fst : fun T C
+      cone-diagram-snd : fun T D
+      cone-diagram-coh : nat-iso (Comp f cone-diagram-fst) (Comp g cone-diagram-snd)
+
+  open cone-diagram public
+```
+
+```
+module _
+  {C D E T : cat} {f : fun C E} {g : fun D E}
+  where
+
+  record cone-diagram-iso (c c' : cone-diagram f g T) : Set where
+    field
+      cone-diagram-iso-fst : nat-iso (cone-diagram-fst c) (cone-diagram-fst c')
+      cone-diagram-iso-snd : nat-iso (cone-diagram-snd c) (cone-diagram-snd c')
+      cone-diagram-iso-coh :
+        3-iso
+          ( Comp
+            ( cone-diagram-coh c')
+            ( r-whisk-tm f cone-diagram-iso-fst (step base)))
+          ( Comp
+            ( r-whisk-tm g cone-diagram-iso-snd (step base))
+            ( cone-diagram-coh c))
+  
+  open cone-diagram-iso public
+```
+
+```agda
+module _
+  {C D E T : cat} {f : fun C E} {g : fun D E} {c c' : cone-diagram f g T}
+  where
+
+  record cone-diagram-iso-iso (Φ Ψ : cone-diagram-iso c c') : Set where
+    field
+      cone-diagram-iso-iso-fst : 3-iso (cone-diagram-iso-fst Φ) (cone-diagram-iso-fst Ψ)
+      cone-diagram-iso-iso-snd : 3-iso (cone-diagram-iso-snd Φ) (cone-diagram-iso-snd Ψ)
+      cone-diagram-iso-iso-coh :
+        4-iso
+          ( Comp
+            ( cone-diagram-iso-coh Ψ)
+            ( r-whisk-tm
+              ( cone-diagram-coh c')
+              ( r-whisk-tm f cone-diagram-iso-iso-fst (step (step base)))
+              ( step base)))
+          ( Comp
+            ( l-whisk-tm
+              ( cone-diagram-coh c)
+              ( r-whisk-tm g cone-diagram-iso-iso-snd (step (step base)))
+              ( step base))
+            ( cone-diagram-iso-coh Φ))
+  
+  open cone-diagram-iso-iso public
+```
+
+Given a functor s: S → T and a cone diagram c = (t₁, t₂, τ) on T we obtain another cone
+diagram s^∗(c) := (t₁ ◦ s, t₂ ◦ s, τ ∗ id_s). Similarly, every natural isomorphism s_1 ≅ s_2
+of functors 𝑆 → 𝑇 induces an isomorphism s_1^∗(c) ≅ s_2^∗(c) of cone diagrams.
+
+```agda
+base-change-cone-diagram : {C D E T S : cat} {f : fun C E} {g : fun D E}
+  (c : cone-diagram f g T) → (s : fun S T) → cone-diagram f g S
+base-change-cone-diagram {f = f} {g} c s = record
+  { cone-diagram-fst = Comp (cone-diagram-fst c) s
+  ; cone-diagram-snd = Comp (cone-diagram-snd c) s
+  ; cone-diagram-coh =
+      Comp
+        ( Inv (Assoc s (cone-diagram-snd c) g))
+        ( Comp
+          ( l-whisk-fun s (cone-diagram-coh c))
+          ( Assoc s (cone-diagram-fst c) f))
+  }
+```
+
+Similarly, every natural isomorphism s_1 ≅ s_2 of functors 𝑆 → 𝑇 induces an isomorphism
+s_1^∗(c) ≅ s_2^∗(c) of cone diagrams. To see this, we need a two new coherences, one showing that
+right whiskering is compatible with associativity isomorphisms, i.e. that for be a type B,
+terms a, b, b', b'' : B, morphisms f : b ⇒ b', g : b' ⇒ b'' and s,s' : a ⇒ b', and an isomorphism
+φ : s ⇒ s', there is an isomorphism ((gf)⋆φ)∘a ≅ a∘(f⋆(g⋆φ)), where a is the associativity
+isomorphism. The other coherence we need is the one showing that codimension-2-composition is
+compatible with whiskering in the sense that given a diagram
+
+
+      ------f-----   ------g----
+    /             🡖 /           🡖
+    C     ⇓φ       D      ⇓ψ     E
+    \             🡕 \           🡕
+      ------f'----   ------g'---
+
+in a type B, the square
+
+  gf ===== ψ⋆f ====> g'f 
+  ||                  ||
+  ||                  ||
+  g⋆φ                 g'⋆φ
+  ||                  ||
+  ||                  ||
+  v                   v
+  gf' ==== ψ⋆f' ====> g'f'
+
+commutes.
+
+```agda
+postulate
+  r-whisk-assoc-coh : {B : Ty} {a b b' b'' : Tm B} (f : Tm ([ _ ] b ⇒ b')) →
+    (g : Tm ([ _ ] b' ⇒ b'')) → {s s' : Tm ([ _ ] a ⇒ b)} → (φ : Tm ([ _ ] s ⇒ s')) →
+      Tm ([ _ ]
+        ( Comp
+          ( Assoc _ _ _)
+          ( r-whisk-tm g (r-whisk-tm f φ (step base)) (step base))) ⇒
+        ( Comp
+          ( r-whisk-tm (Comp g f) φ (step base))
+          ( Assoc _ _ _)))
+
+r-whisk-assoc-inv-coh : {B : Ty} {a b b' b'' : Tm B} (f : Tm ([ _ ] b ⇒ b')) →
+  (g : Tm ([ _ ] b' ⇒ b'')) → {s s' : Tm ([ _ ] a ⇒ b)} → (φ : Tm ([ _ ] s ⇒ s')) →
+    Tm ([ _ ]
+      Comp
+        ( Inv (Assoc _ _ _))
+        ( r-whisk-tm (Comp g f) φ (step base)) ⇒
+      Comp
+        ( r-whisk-tm g (r-whisk-tm f φ (step base)) (step base))
+        ( Inv (Assoc _ _ _)))
+r-whisk-assoc-inv-coh f g φ =
+  square-iso-inv
+    ( _)
+    ( _)
+    ( r-whisk-tm g (r-whisk-tm f φ (step base)) (step base))
+    ( r-whisk-tm (Comp g f) φ (step base))
+    ( r-whisk-assoc-coh _ _ _)
+
+
+postulate
+  codim-2-comp-whisk-coh : {B : Ty} {C D E : Tm B} {f f' : Tm ([ _ ] C ⇒ D)}
+    {g g' : Tm ([ _ ] D ⇒ E)} (φ : Tm ([ _ ] f ⇒ f')) → (ψ : Tm ([ _ ] g ⇒ g')) →
+      Tm ([ _ ]
+        Comp
+          ( l-whisk-tm f' ψ (step base))
+          ( r-whisk-tm g φ (step base)) ⇒
+        Comp
+          ( r-whisk-tm g' φ (step base))
+          ( l-whisk-tm f ψ (step base)))
+
+base-change-cone-diagram-iso : {C D E T S : cat} {f : fun C E} {g : fun D E}
+  {c : cone-diagram f g T} (s s' : fun S T) → (φ : nat-iso s s') →
+    cone-diagram-iso (base-change-cone-diagram c s) (base-change-cone-diagram c s')
+base-change-cone-diagram-iso {f = f} {g = g} {c = c} s s' φ = record
+  { cone-diagram-iso-fst = r-whisk-tm (cone-diagram-fst c) φ (step base)
+  ; cone-diagram-iso-snd = r-whisk-tm (cone-diagram-snd c) φ (step base)
+  ; cone-diagram-iso-coh =
+      3-square-pasting-left-assoc
+        ( r-whisk-assoc-coh (cone-diagram-fst c) f φ)
+        ( codim-2-comp-whisk-coh φ (cone-diagram-coh c))
+        ( r-whisk-assoc-inv-coh (cone-diagram-snd c) g φ)
+  }
+```

@@ -1,6 +1,5 @@
 ```agda
 {-# OPTIONS --guardedness #-}
-{-# OPTIONS --allow-unsolved-metas #-}
 
 open import CaTT.CaTT
 open import CaTT.whiskering
