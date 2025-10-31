@@ -1,4 +1,5 @@
 ```agda
+{-# OPTIONS --allow-unsolved-metas #-}
 open import CaTT.CaTT
 open import CaTT.whiskering
 ```
@@ -97,9 +98,50 @@ square-iso-inv  {y = y} {z = z} f g p q φ =
             ( step base)))))
 ```
 
+Inverting the top arrow in a commutative square:
 
-H : gp ≅ qf
-------------
-g^-1gpf^-1 = g^-1qff^-1
+  x ---f----> y           x <--f^-1-- y
+  |           |           |           |
+  p           q           p           q
+  |    ⇗      |     ↦     ∣    ⇒      |
+  v           v           v           v
+  z ---g----> w           z ----g---> y.
 
-W : g^-1q ≅ pf^-1
+```agda
+inv-top-arr-comm-sq : {B : Ty} {b b' : Tm B} {x y z w : Tm ([ _ ] b ⇒ b')} (f : arr x y) →
+  (g : arr z w) → (p : arr x z) → (q : arr y w) → arr (Comp g p) (Comp q f) →
+    arr (Comp (Comp g p) (Inv f)) q
+inv-top-arr-comm-sq f g p q φ =
+  Comp
+    ( Right-unit-law q)
+    ( Comp
+      ( Comp
+        ( r-whisk-tm q (Inv-is-sec f) (step base)) (Inv (Assoc _ _ _)))
+        ( l-whisk-tm (Inv f) φ (step base)))
+```
+
+
+
+```agda
+comp-can-Rr : {A : Ty} {t u : Tm A} {x y z : arr t u} {f : arr x y} {g : arr y z} {h : arr x z} →
+  arr h (Comp g f) → arr (Comp h (Inv f)) g
+comp-can-Rr {f = f} {g} φ =
+  Comp
+    ( Comp
+      ( Comp (Right-unit-law _) (r-whisk-tm g (Inv-is-sec f) (step base))) (Inv (Assoc _ _ _)))
+    ( l-whisk-tm (Inv f) φ (step base))
+```
+
+```agda
+inv-reassoc-pb : {B : Ty} {t u : Tm B} {a b c d x y z w : arr t u} {f : arr a b} {g : arr b c}
+  {h : arr c d} {f' : arr x y} {g' : arr y z} {h' : arr z w} {p : arr a x} {q : arr d w} →
+  arr (Comp (Comp h' (Comp g' f')) p) (Comp q (Comp h (Comp g f))) → 
+    arr (Comp (Comp h' (Comp (Comp g' (Comp (Comp f' p) (Inv f))) (Inv g))) (Inv h)) q
+inv-reassoc-pb {f = f} {g} {h} {f'} {g'} {h'} φ =
+  comp-can-Rr
+    ( Comp (comp-can-Rr (Comp (Comp (comp-can-Rr
+      ( Comp (Assoc _ _ _) (Comp (Assoc _ _ _) (Comp
+        ( Comp φ (Assoc _ _ _) ) (r-whisk-tm h' (Assoc _ _ _) (step base)))))) (Assoc _ _ _))
+     ( r-whisk-tm h' (Assoc _ _ _) (step base)))) (Assoc _ _ _))
+```
+

@@ -1,5 +1,6 @@
 ```agda
 {-# OPTIONS --guardedness #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 open import CaTT.CaTT
 open import CaTT.commutative-squares-pasting
@@ -44,7 +45,7 @@ open pullback-cons public
 The components of a pullback 
 
 ```agda
-coh-pb-ty : {C D E : cat} {f : fun C E} {g : fun D E} {A : Ty} → (c : cone f g) →
+coh-pb-ty : {C D E : cat} {f : fun C E} {g : fun D E} {A : Ty} (c : cone f g) →
   (p : t* A ≡ (cone-apex c)) → (t₁ : Tm (r-whisk-ty (cone-fst c) A p)) →
   (t₂ : Tm (r-whisk-ty (cone-snd c) A p)) → Ty
 coh-pb-ty {f = f} {g} {A} c p t₁ t₂ =
@@ -148,8 +149,8 @@ module _
         (t₂ : Tm (r-whisk-ty (cone-snd c) A p)) → (coh : Tm (coh-pb-ty c p t₁ t₂)) → 
           Tm (coh₃-pb-ty A c p t₁ t₂ coh (pair A p t₁ t₂ coh) (coh₁ A p t₁ t₂ _) (coh₂ A p t₁ t₂ _))
 
-pb-cone : {C D E : cat} (f : fun C E) → (g : fun D E) → is-pb (pb f g)
-pb-cone f g = record {
+pb-is-pb : {C D E : cat} (f : fun C E) → (g : fun D E) → is-pb (pb f g)
+pb-is-pb f g = record {
   pair = pair-pb ;
   coh₁ = coh₁-pb ;
   coh₂ = coh₂-pb ;
@@ -223,6 +224,8 @@ module _
 Given a functor s: S → T and a cone diagram c = (t₁, t₂, τ) on T we obtain another cone
 diagram s^∗(c) := (t₁ ◦ s, t₂ ◦ s, τ ∗ id_s). Similarly, every natural isomorphism s_1 ≅ s_2
 of functors 𝑆 → 𝑇 induces an isomorphism s_1^∗(c) ≅ s_2^∗(c) of cone diagrams.
+
+** whiskering of cone diagrams **
 
 ```agda
 base-change-cone-diagram : {C D E T S : cat} {f : fun C E} {g : fun D E}
@@ -309,9 +312,9 @@ postulate
           ( l-whisk-tm f ψ (step base)))
 
 base-change-cone-diagram-iso : {C D E T S : cat} {f : fun C E} {g : fun D E}
-  {c : cone-diagram f g T} (s s' : fun S T) → (φ : nat-iso s s') →
+  {c : cone-diagram f g T} {s s' : fun S T} (φ : nat-iso s s') →
     cone-diagram-iso (base-change-cone-diagram c s) (base-change-cone-diagram c s')
-base-change-cone-diagram-iso {f = f} {g = g} {c = c} s s' φ = record
+base-change-cone-diagram-iso {f = f} {g = g} {c = c} φ = record
   { cone-diagram-iso-fst = r-whisk-tm (cone-diagram-fst c) φ (step base)
   ; cone-diagram-iso-snd = r-whisk-tm (cone-diagram-snd c) φ (step base)
   ; cone-diagram-iso-coh =
@@ -320,4 +323,73 @@ base-change-cone-diagram-iso {f = f} {g = g} {c = c} s s' φ = record
         ( codim-2-comp-whisk-coh φ (cone-diagram-coh c))
         ( r-whisk-assoc-inv-coh (cone-diagram-snd c) g φ)
   }
+```
+
+```agda
+module _
+  {C D E : cat}
+  where
+
+  cone-diagram-of-cone : {f : fun C E} {g : fun D E} (c : cone f g) → cone-diagram f g (cone-apex c)
+  cone-diagram-of-cone c = record
+    { cone-diagram-fst = cone-fst c ; 
+      cone-diagram-snd = cone-snd c ; 
+      cone-diagram-coh = cone-coh c }
+
+  pb' : (f : fun C E) → (g : fun D E) →  cone-diagram f g (cone-apex (pb f g))
+  pb' f g = cone-diagram-of-cone (pb f g)
+```
+
+```agda
+module _
+  {C D E T : cat} {f : fun C E} {g : fun D E}
+  where 
+
+  pb-ax₁ : cone-diagram f g T → fun T (cone-apex (pb f g))
+  pb-ax₁ c = pair-pb (arrty _ _) base (cone-diagram-fst c) (cone-diagram-snd c) (cone-diagram-coh c)
+
+  pb-ax₂ : (c : cone-diagram f g T) → cone-diagram-iso c (base-change-cone-diagram (pb' f g) (pb-ax₁ c))
+  pb-ax₂ c = record
+    { cone-diagram-iso-fst =
+        coh₁-pb _ base (cone-diagram-fst c) (cone-diagram-snd c) (cone-diagram-coh c)
+    ; cone-diagram-iso-snd =
+        coh₂-pb _ base (cone-diagram-fst c) (cone-diagram-snd c) (cone-diagram-coh c)
+    ; cone-diagram-iso-coh = 
+        Inv (coh₃-pb _ base (cone-diagram-fst c) (cone-diagram-snd c) (cone-diagram-coh c))
+    }
+
+  pb-ax₃ : {T : cat} {s t : fun T (cone-apex (pb f g))} →
+    cone-diagram-iso (base-change-cone-diagram (pb' f g) s) (base-change-cone-diagram (pb' f g) t) →
+      nat-iso s t
+  pb-ax₃ {s = s} {t} Φ =
+    pair-pb
+      ( [ _ ] s ⇒ t)
+      ( step base)
+      ( cone-diagram-iso-fst Φ) 
+      ( cone-diagram-iso-snd Φ)
+      ( inv-reassoc-pb (cone-diagram-iso-coh Φ))
+
+  pb-ax₄ : {T : cat} {s t : fun T (cone-apex (pb f g))} → 
+    (Φ : cone-diagram-iso
+      ( base-change-cone-diagram (pb' f g) s)
+      ( base-change-cone-diagram (pb' f g) t)) →
+      cone-diagram-iso-iso Φ (base-change-cone-diagram-iso (pb-ax₃ Φ))
+  pb-ax₄ Φ = record
+    { cone-diagram-iso-iso-fst =
+        coh₁-pb
+          ( _)
+          ( step base)
+          ( cone-diagram-iso-fst Φ)
+          ( cone-diagram-iso-snd Φ)
+          ( inv-reassoc-pb (cone-diagram-iso-coh Φ))
+    ; cone-diagram-iso-iso-snd =
+        coh₂-pb
+          (  _)
+          ( step base)
+          ( cone-diagram-iso-fst Φ)
+          ( cone-diagram-iso-snd Φ)
+          ( inv-reassoc-pb (cone-diagram-iso-coh Φ))
+    ; cone-diagram-iso-iso-coh = {! coh₃-pb !}
+    }    
+
 ```

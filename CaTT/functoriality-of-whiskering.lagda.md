@@ -41,11 +41,13 @@ mutual
 
   r-unit-lax-trans : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) →
     lax-trans (ty-morph-comp (r-unit-morph D B' p) (r-whisk-morph B' p (Id D))) (id-ty-morph B')
-  r-unit-lax-trans = R-unit-coh
+  r-unit-lax-trans D .([ _ ] _ ⇒ D) base = Left-unit-law
+  r-unit-lax-trans D .([ _ ] _ ⇒ _) (step p) = R-unit-coh D _ (step p)
 
   r-unit-lax-trans-inv : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) →
     lax-trans (ty-morph-comp (r-whisk-morph B' p (Id D)) (r-unit-morph D B' p)) (id-ty-morph _)
-  r-unit-lax-trans-inv = R-unit-coh-inv
+  r-unit-lax-trans-inv D .([ _ ] _ ⇒ D) base = Left-unit-law
+  r-unit-lax-trans-inv D .([ _ ] _ ⇒ _) (step p) = R-unit-coh-inv D _ (step p)
   
   postulate
     R-unit-coh : {B : Ty} (D : Tm B) → (B' : Ty) → (p : t* B' ≡ D) → (b : Tm B') → Tm
@@ -64,31 +66,27 @@ mutual
         ( r-whisk-ty h (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p)) 
   r-assoc-morph {B = B} {F = F} g h ([ _ ] C ⇒ _) base = id-ty-morph ([ B ] C ⇒ F)
   r-assoc-morph g h ([ [ B' ] x ⇒ y ] t ⇒ u) (step base) =
-    postcomp-morph
-      ( precomp-morph
+    precomp-morph
+      ( postcomp-morph
         ( shift
           ( r-assoc-morph g h ([ B' ] x ⇒ y) base)
-          ( [ r-whisk-ty (Comp h g) ([ B' ] x ⇒ y) base ]
-            r-whisk-tm (Comp h g) t base ⇒
-            r-whisk-tm (Comp h g) u base)
+          ( [ _ ] r-whisk-tm (Comp h g) t base ⇒ r-whisk-tm (Comp h g) u base)
           ( step base))
         ( base)
-        ( Inv (r-assoc-lax-trans g h ([ B' ] x ⇒ y) base t)))
+        ( r-assoc-lax-trans g h ([ B' ] x ⇒ y) base u))
       ( base)
-      ( r-assoc-lax-trans g h ([ B' ] x ⇒ y) base u)
+      ( Inv (r-assoc-lax-trans g h ([ B' ] x ⇒ y) base t))
   r-assoc-morph g h ([ [ B' ] x ⇒ y ] t ⇒ u) (step (step p)) =
-    postcomp-morph
-      ( precomp-morph
+    precomp-morph
+      ( postcomp-morph
         ( shift
           ( r-assoc-morph g h ([ B' ] x ⇒ y) (step p))
-          ( [ r-whisk-ty (Comp h g) ([ B' ] x ⇒ y) (step p) ]
-            r-whisk-tm (Comp h g) t (step p) ⇒
-            r-whisk-tm (Comp h g) u (step p))
+          ( [ _ ] r-whisk-tm (Comp h g) t (step p) ⇒ r-whisk-tm (Comp h g) u (step p))
           ( step base))
         ( base)
-        (Inv (r-assoc-lax-trans g h ([ B' ] x ⇒ y) (step p) t)))
+        ( r-assoc-lax-trans g h ([ B' ] x ⇒ y) (step p) u))
       ( base)
-      ( r-assoc-lax-trans g h ([ B' ] x ⇒ y) (step p) u)
+      ( Inv (r-assoc-lax-trans g h ([ B' ] x ⇒ y) (step p) t))
 
   r-assoc-lax-trans : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
     (B' : Ty) → (p : t* B' ≡ D) →
@@ -99,7 +97,8 @@ mutual
         ( ty-morph-comp
           ( r-whisk-morph (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p) h)
           ( r-whisk-morph B' p g))
-  r-assoc-lax-trans = R-assoc-coh
+  r-assoc-lax-trans g h .([ _ ] _ ⇒ _) base = λ α → Inv (Assoc _ _ _)
+  r-assoc-lax-trans g h .([ _ ] _ ⇒ _) (step p) = R-assoc-coh _ _ _ (step p)
 
   postulate
     R-assoc-coh : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) → 
@@ -145,7 +144,7 @@ mutual
         ( base)
         ( r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) (step p) u))
       ( base)
-      (Inv (r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) (step p) t))
+      ( Inv (r-assoc-lax-trans-inv g h ([ B' ] x ⇒ y) (step p) t))
 
   r-assoc-lax-trans-inv : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
     (B' : Ty) → (p : t* B' ≡ D) →
@@ -156,7 +155,8 @@ mutual
             ( r-whisk-morph (r-whisk-ty g B' p) (t*-r-whisk-ty g B' p) h)
             ( r-whisk-morph B' p g)))
         ( r-whisk-morph B' p (Comp h g))
-  r-assoc-lax-trans-inv = R-assoc-inv-coh
+  r-assoc-lax-trans-inv g h .([ _ ] _ ⇒ _) base = λ α → Assoc _ _ _
+  r-assoc-lax-trans-inv g h .([ _ ] _ ⇒ _) (step p) = R-assoc-inv-coh _ _ _ (step p)
 
   postulate
     R-assoc-inv-coh : {B : Ty} {D E F : Tm B} (g : Tm ([ B ] D ⇒ E)) → (h : Tm ([ B ] E ⇒ F)) →
@@ -200,7 +200,8 @@ mutual
     lax-trans
       ( ty-morph-comp (r-transport-morph β B' p) (r-whisk-morph B' p g))
       ( r-whisk-morph B' p g')
-  r-transport-lax-trans = R-transport-coh
+  r-transport-lax-trans β .([ _ ] _ ⇒ _) base = λ α → l-whisk-tm α β (step base)
+  r-transport-lax-trans β .([ _ ] _ ⇒ _) (step p) = R-transport-coh _ _ (step p)
 
   postulate
     R-transport-coh : {B : Ty} {D E : Tm B}  {g g' : Tm ([ B ] D ⇒ E)}
