@@ -2,6 +2,7 @@
 {-# OPTIONS --guardedness #-}
 
 open import CaTT.CaTT
+open import CaTT.coherences
 open import CaTT.whiskering
 open import CaTT.type-morphisms
 open import CaTT.lax-transformations

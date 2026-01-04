@@ -1,6 +1,5 @@
 ```agda
 open import CaTT.CaTT
-open import Agda.Builtin.Equality
 ```
 
 ```agda
@@ -64,47 +63,3 @@ s*-l-whisk-ty f ([ A ] t ⇒ u) (step p) = step (s*-l-whisk-ty f A p)
 The codimension-1 composition _∘_ is obtained as a special case of whiskering. Since in the case of
 whiskering a 1-cell by a 1-cell, the left and the right whiskering are definitionally equal (as is
 the case in CaTT), it doesn't matter which of the two definitions we use
-
-```agda
-Comp : {A : Ty} {t u v : Tm A} → Tm ([ A ] u ⇒ v) → Tm ([ A ] t ⇒ u) → Tm ([ A ] t ⇒ v)
-Comp {A} {t} {u} {∨} g f = r-whisk-tm {A} {u} {∨} {[ A ] t ⇒ u} g f base
-
-Comp' : {A : Ty} {t u v : Tm A} → Tm ([ A ] u ⇒ v) → Tm ([ A ] t ⇒ u) → Tm ([ A ] t ⇒ v)
-Comp' {A} {t} {u} g f = l-whisk-tm f g base
-
-Comp-Eq : {A : Ty} {t u v : Tm A} → (g : Tm ([ A ] u ⇒ v)) → (f : Tm ([ A ] t ⇒ u)) →
-  Comp g f ≡ Comp' g f
-Comp-Eq g f = refl
-```
-
-Composition is unital and associative.
-
-```agda
-postulate
-  Left-unit-law :
-    {A : Ty} {a b : Tm A} (f : Tm ([ A ] a ⇒ b)) →
-      Tm ([ [ A ] a ⇒ b ] Comp (Id b) f ⇒ f) 
-
-postulate
-  Right-unit-law :
-    {A : Ty} {a b : Tm A} (f : Tm ([ A ] a ⇒ b)) →
-      Tm ([ [ A ] a ⇒ b ] Comp f (Id a) ⇒ f)
-
-postulate
-  Assoc : {A : Ty} {a b c d : Tm A} → (f : Tm ([ A ] a ⇒ b)) → (g : Tm ([ A ] b ⇒ c)) →
-    (h : Tm ([ A ] c ⇒ d)) → Tm ([ [ A ] a ⇒ d ] Comp h (Comp g f) ⇒ Comp (Comp h g) f)
-```
-
-Inverses are indeed inverses
-
-```agda
-postulate
-  Inv-is-sec :
-    {A : Ty} {t u : Tm A} {f g : Tm ([ A ] t ⇒ u)} → (α : Tm ([ _ ] f ⇒ g)) → 
-      Tm ( [ _ ] Comp α (Inv α) ⇒ Id g)
-
-postulate
-  Inv-is-ret :
-    {A : Ty} {t u : Tm A} {f g : Tm ([ A ] t ⇒ u)} → (α : Tm ([ _ ] f ⇒ g)) → 
-      Tm ( [ _ ] Comp (Inv α) α ⇒ Id f)
-```

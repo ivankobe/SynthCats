@@ -1,7 +1,8 @@
 ```agda
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --guardedness #-}
 open import CaTT.CaTT
 open import CaTT.whiskering
+open import CaTT.coherences
 ```
 
 ```agda
@@ -145,3 +146,25 @@ inv-reassoc-pb {f = f} {g} {h} {f'} {g'} {h'} φ =
      ( r-whisk-tm h' (Assoc _ _ _) (step base)))) (Assoc _ _ _))
 ```
 
+pasting two squares and two triangles:
+
+
+o      o
+  o  o
+o      o
+
+```agda
+tr-sq-sq-tr : {A : Ty} {x y z x' y' z' : Tm A} {f : arr x y} {g : arr y z} {h : arr x z}
+  {f' : arr x' y'} {g' : arr y' z'} {h' : arr x' z'} {α : arr x x'} {β : arr y y'} {γ : arr z z'}
+  (φ : arr h (Comp g f)) → (ξ : arr (Comp β f) (Comp f' α)) → (χ : arr (Comp γ g) (Comp g' β)) →
+  (ψ : arr (Comp g' f') h') → arr (Comp γ h) (Comp h' α)
+tr-sq-sq-tr φ ξ χ ψ =
+  Comp ( l-whisk-tm _ ψ (step base))
+    ( Comp (Assoc _ _ _)
+      ( Comp (r-whisk-tm _ ξ (step base))
+        ( Comp (Inv (Assoc _ _ _))
+          ( Comp (l-whisk-tm _ χ (step base))
+            ( Comp (Assoc _ _ _)
+              ( r-whisk-tm _ φ (step base)))))))
+
+```

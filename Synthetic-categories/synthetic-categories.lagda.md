@@ -5,6 +5,7 @@ open import Data.Product.Base
 open import Agda.Builtin.Sigma
 
 open import CaTT.CaTT
+open import CaTT.coherences
 open import CaTT.whiskering
 
 module Synthetic-categories.synthetic-categories where

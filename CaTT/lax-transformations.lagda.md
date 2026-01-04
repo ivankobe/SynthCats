@@ -2,6 +2,7 @@
 {-# OPTIONS --guardedness #-}
 
 open import CaTT.CaTT
+open import CaTT.coherences
 open import CaTT.whiskering
 open import CaTT.type-morphisms
 
@@ -139,4 +140,15 @@ lax-3-iso-inv-is-ret : {A B : Ty} {φ ψ : ty-morph A B} {Φ Ψ : lax-trans φ �
   (ξ : lax-3-iso {φ = φ} {ψ} Φ Ψ) → (α : Tm A) →
     Tm ([ _ ] Comp ((lax-3-iso-inv {φ = φ} {ψ} {Φ} {Ψ}  ξ) α) (ξ α) ⇒ Id _)
 lax-3-iso-inv-is-ret ξ α = Inv-is-ret (ξ α)
+```
+
+```agda
+r-whisk-lax-trans : {A B C : Ty} {φ ψ : ty-morph A B} (Φ : lax-trans φ ψ) → (ξ : ty-morph B C) →
+  lax-trans (ty-morph-comp ξ φ) (ty-morph-comp ξ ψ)
+r-whisk-lax-trans Φ ξ α = ty-morph-base (ty-morph-step ξ) (Φ α)
+
+l-whisk-lax-trans : {A B C : Ty} {ψ ξ : ty-morph B C} (φ : ty-morph A B) (Φ : lax-trans ψ ξ) →
+  lax-trans (ty-morph-comp ψ φ) (ty-morph-comp ξ φ)
+l-whisk-lax-trans φ Φ α = Φ (ty-morph-base φ α)
+
 ```

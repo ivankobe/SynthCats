@@ -24,7 +24,6 @@ record ty-morph (A B : Ty) : Set where
 open ty-morph public
 ```
 
-
 Type morphisms can be composed, and for every type A : Ty,
 we have the identity morphism from A to A.
 
