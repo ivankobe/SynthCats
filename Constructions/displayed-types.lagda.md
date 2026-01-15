@@ -82,6 +82,19 @@ module _
   Llax (id-dtype-morph A) = λ _ → Id _
   Rlax (id-dtype-morph A) = λ _ → Id _
 
+  dtype-morph-comp : {A B C : dtype} (ψ : dtype-morph B C) → (φ : dtype-morph A B) → dtype-morph A C
+  Lmor (dtype-morph-comp ψ φ)   = ty-morph-comp (Lmor ψ) (Lmor φ)
+  Amor (dtype-morph-comp ψ φ)   = ty-morph-comp (Amor ψ) (Amor φ)
+  Rmor (dtype-morph-comp ψ φ)   = ty-morph-comp (Rmor ψ) (Rmor φ)
+  Llax (dtype-morph-comp ψ φ) α =
+    Comp
+      ( ty-morph-base (ty-morph-step (Amor ψ)) (Llax φ α))
+      ( Llax ψ (ty-morph-base (Lmor φ) α))
+  Rlax (dtype-morph-comp ψ φ) α =
+    Comp
+      ( ty-morph-base (ty-morph-step (Amor ψ)) (Rlax φ α))
+      ( Rlax ψ (ty-morph-base (Rmor φ) α))
+
   whisk-cone-dtype-morph : {S T : cat} (s : fun S T) → dtype-morph (cone T) (cone S)
   Lmor (whisk-cone-dtype-morph s)   = l-whisk-morph _ base s
   Amor (whisk-cone-dtype-morph s)   = l-whisk-morph _ base s
@@ -148,4 +161,14 @@ module _
   laxR (whisk-cone-unit T) = Right-unit-law 
   3isoL (whisk-cone-unit T) α = Triangle-identity-right α f
   3isoR (whisk-cone-unit T) α = Triangle-identity-right α g
+
+  whisk-cone-assoc : {T S R : cat} (s : fun S T) → (r : fun R S) → 
+    dtype-lax-trans {cone T} {cone R}
+      ( dtype-morph-comp (whisk-cone-dtype-morph r) (whisk-cone-dtype-morph s))
+      ( whisk-cone-dtype-morph (Comp s r))
+  laxL (whisk-cone-assoc s t) h =  Inv (Assoc t s h)
+  laxA (whisk-cone-assoc s r) h = Inv (Assoc r s h)
+  laxR (whisk-cone-assoc s r) h = Inv (Assoc r s h)
+  3isoL (whisk-cone-assoc s r) h = {!   !}
+  3isoR (whisk-cone-assoc s r) h = {!   !}
 ```
