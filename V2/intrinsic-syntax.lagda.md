@@ -12,12 +12,20 @@ mutual
   data Sub : Ctx → Ctx → Set
   data EqSub : {Γ Δ : Ctx} → Sub Γ Δ → Sub Γ Δ → Set
   postulate _∘_ : {Θ Δ Γ : Ctx} (γ : Sub Δ Γ) → (δ : Sub Θ Δ) → Sub Θ Γ
-  postulate _[_]ty : {Γ Δ : Ctx} → Ty Γ → Sub Δ Γ → Ty Δ
-  postulate _[_]tm : {Γ Δ : Ctx} {A : Ty Γ} → Tm A → (σ : Sub Δ Γ) → Tm (A [ σ ]ty)
 
   data Ctx where
     ∅ : Ctx
     _,_ : (Γ : Ctx) → (A : Ty Γ) → Ctx
+
+  data Ty where
+    Ob : {Γ : Ctx} → Ty Γ
+    [_]_⇒_ : {Γ : Ctx} → (A : Ty Γ) → (t : Tm A) → (u : Tm A) → Ty Γ
+
+  _[_]ty : {Γ Δ : Ctx} → Ty Γ → Sub Δ Γ → Ty Δ
+  Ob [ σ ]ty = Ob
+  ([ A ] t ⇒ u) [ σ ]ty = [ (A [ σ ]ty) ] (t [ σ ]tm) ⇒ (u [ σ ]tm)
+  
+  postulate _[_]tm : {Γ Δ : Ctx} {A : Ty Γ} → Tm A → (σ : Sub Δ Γ) → Tm (A [ σ ]ty)
 
   data Sub where
     id : {Γ : Ctx} → Sub Γ Γ
@@ -32,10 +40,6 @@ mutual
   data Tm where
     var : {Γ : Ctx} (A : Ty Γ) → Tm (A [ (wk Γ A) ]ty)
 
-  data Ty where
-    Ob : {Γ : Ctx} → Ty Γ
-    [_]_⇒_ : {Γ : Ctx} → (A : Ty Γ) → (t : Tm A) → (u : Tm A) → Ty Γ
-
   data EqTy where
     id-ty : {Γ : Ctx} (A : Ty Γ) → EqTy (A [ id ]ty) A
     comp-ty : {Θ Δ Γ : Ctx} (γ : Sub Δ Γ) → (δ : Sub Θ Δ) → (A : Ty Γ) →
@@ -47,7 +51,7 @@ mutual
 
   postulate TrEqTy : {Γ : Ctx} {A B : Ty Γ} (t : Tm A) → EqTy A B → Tm B
   postulate TrEqTy' : {Γ : Ctx} {A B : Ty Γ} (t : Tm B) → EqTy A B → Tm A
-  
+
 ```
 
 -- ```agda
