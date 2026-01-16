@@ -1,112 +1,112 @@
 ```agda
+{-# OPTIONS --rewriting #-}
 
 module V2.intrinsic-syntax where
 
+open import Agda.Builtin.Equality
+open import Agda.Builtin.Equality.Rewrite
+
 mutual
 
-  data Ctx : Set
-  data Ty : Ctx → Set
-  data EqTy : {Γ : Ctx} (A B : Ty Γ) → Set
-  data Tm : {Γ : Ctx} → Ty Γ → Set
-  data EqTm : {Γ : Ctx} {A : Ty Γ} (t u : Tm A) → Set
-  data Sub : Ctx → Ctx → Set
-  data EqSub : {Γ Δ : Ctx} → Sub Γ Δ → Sub Γ Δ → Set
-  postulate _∘_ : {Θ Δ Γ : Ctx} (γ : Sub Δ Γ) → (δ : Sub Θ Δ) → Sub Θ Γ
-
-  data Ctx where
+  data Ctx : Set where
     ∅ : Ctx
-    _,_ : (Γ : Ctx) → (A : Ty Γ) → Ctx
+    _,_ : (Γ : Ctx) → Ty Γ → Ctx
 
-  data Ty where
+  data Ty : Ctx → Set where
     Ob : {Γ : Ctx} → Ty Γ
-    [_]_⇒_ : {Γ : Ctx} → (A : Ty Γ) → (t : Tm A) → (u : Tm A) → Ty Γ
+    [_]_⇒_ : {Γ : Ctx} → (A : Ty Γ) → Tm Γ A → Tm Γ A → Ty Γ
+    _[_]ty : {Γ Δ : Ctx} → Ty Γ → Sub Δ Γ → Ty Δ
 
-  _[_]ty : {Γ Δ : Ctx} → Ty Γ → Sub Δ Γ → Ty Δ
-  Ob [ σ ]ty = Ob
-  ([ A ] t ⇒ u) [ σ ]ty = [ (A [ σ ]ty) ] (t [ σ ]tm) ⇒ (u [ σ ]tm)
-  
-  postulate _[_]tm : {Γ Δ : Ctx} {A : Ty Γ} → Tm A → (σ : Sub Δ Γ) → Tm (A [ σ ]ty)
-
-  data Sub where
+  data Sub : Ctx → Ctx → Set where
+    ⟨⟩ : {Δ : Ctx} → Sub Δ ∅
+    p : {Γ : Ctx} {A : Ty Γ} → Sub (Γ , A) Γ
     id : {Γ : Ctx} → Sub Γ Γ
-    ⟨_,_⟩ : {Γ Δ : Ctx} → (σ : Sub Δ Γ) → (A : Ty Γ) → Tm (A [ σ ]ty) → Sub Δ (Γ , A)
-    wk : (Γ : Ctx) → (A : Ty Γ) → Sub (Γ , A) Γ
+    _∘_ : {Γ Δ Θ : Ctx} → Sub Δ Γ → Sub Θ Δ → Sub Θ Γ
+    ⟨_,_⟩ : {Γ Δ : Ctx} {A : Ty Γ} → (σ : Sub Δ Γ) 
+          → Tm Δ (A [ σ ]ty) → Sub Δ (Γ , A)
 
-  data EqSub where
-    assoc-sub : {Ξ Θ Δ Γ : Ctx} (γ : Sub Δ Γ) (δ : Sub Θ Δ) (θ : Sub Ξ Θ) → EqSub (γ ∘ (δ ∘ θ)) ((γ  ∘ δ) ∘ θ)
-    unit-left-sub : {Δ Γ : Ctx} → (γ : Sub Δ Γ) → EqSub (id ∘ γ) γ
-    unit-right-sub : {Δ Γ : Ctx} → (γ : Sub Δ Γ) → EqSub (γ ∘ id) γ
+  data Tm : (Γ : Ctx) → Ty Γ → Set where
+    var₀ : {Γ : Ctx} {A : Ty Γ} → Tm (Γ , A) (A [ p ]ty)
+    _[_]tm : {Γ Δ : Ctx} {A : Ty Γ} → Tm Γ A → (σ : Sub Δ Γ) → Tm Δ (A [ σ ]ty)
+    -- Coherences to be added later
 
-  data Tm where
-    var : {Γ : Ctx} (A : Ty Γ) → Tm (A [ (wk Γ A) ]ty)
+----------------------------------------------------------------------
+-- EQUATIONS
+----------------------------------------------------------------------
 
-  data EqTy where
-    id-ty : {Γ : Ctx} (A : Ty Γ) → EqTy (A [ id ]ty) A
-    comp-ty : {Θ Δ Γ : Ctx} (γ : Sub Δ Γ) → (δ : Sub Θ Δ) → (A : Ty Γ) →
-      EqTy (A [ (γ ∘ δ) ]ty) ((A [ γ ]ty) [ δ ]ty)
+-- Type substitution equations
+postulate
+  Ob-[] : {Γ Δ : Ctx} {σ : Sub Δ Γ} 
+        → (Ob [ σ ]ty) ≡ Ob
+  
+  Hom-[] : {Γ Δ : Ctx} {A : Ty Γ} {t u : Tm Γ A} {σ : Sub Δ Γ}
+         → (([ A ] t ⇒ u) [ σ ]ty) ≡ ([ A [ σ ]ty ] (t [ σ ]tm) ⇒ (u [ σ ]tm))
 
-  data EqTm where
-    comp-tm : {Θ Δ Γ : Ctx} (γ : Sub Δ Γ) → (δ : Sub Θ Δ) → {A : Ty Γ} → (t : Tm A) →
-      EqTm (t [ (γ ∘ δ) ]tm) (TrEqTy' ((t [ γ ]tm) [ δ ]tm) (comp-ty γ δ A))
+-- Identity laws on types
+postulate
+  [id]ty : {Γ : Ctx} {A : Ty Γ} 
+         → (A [ id ]ty) ≡ A
 
-  postulate TrEqTy : {Γ : Ctx} {A B : Ty Γ} (t : Tm A) → EqTy A B → Tm B
-  postulate TrEqTy' : {Γ : Ctx} {A B : Ty Γ} (t : Tm B) → EqTy A B → Tm A
+  [][]ty : {Γ Δ Θ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {τ : Sub Θ Δ}
+         → ((A [ σ ]ty) [ τ ]ty) ≡ (A [ σ ∘ τ ]ty)
+
+{-# REWRITE Ob-[] #-}
+{-# REWRITE Hom-[] #-}
+{-# REWRITE [id]ty #-}
+{-# REWRITE [][]ty #-}
+
+postulate
+  [id]tm : {Γ : Ctx} {A : Ty Γ} {t : Tm Γ A}
+         → (t [ id ]tm) ≡ t
+  
+  id∘ : {Γ Δ : Ctx} {σ : Sub Δ Γ}
+      → (id ∘ σ) ≡ σ
+  
+  ∘id : {Γ Δ : Ctx} {σ : Sub Δ Γ}
+      → (σ ∘ id) ≡ σ
+
+  ∘assoc : {Γ Δ Θ Ξ : Ctx} {σ : Sub Δ Γ} {τ : Sub Θ Δ} {ρ : Sub Ξ Θ}
+         → ((σ ∘ τ) ∘ ρ) ≡ (σ ∘ (τ ∘ ρ))
+  
+  [][]tm : {Γ Δ Θ : Ctx} {A : Ty Γ} {t : Tm Γ A} {σ : Sub Δ Γ} {τ : Sub Θ Δ}
+         → ((t [ σ ]tm) [ τ ]tm) ≡ (t [ σ ∘ τ ]tm)
+
+  p∘⟨⟩ : {Γ Δ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)}
+       → ((p {Γ} {A} ) ∘ ⟨ σ , t ⟩) ≡ σ
+
+{-# REWRITE [id]tm #-}
+{-# REWRITE id∘ #-}
+{-# REWRITE ∘id #-}
+{-# REWRITE ∘assoc #-}
+{-# REWRITE [][]tm #-}
+{-# REWRITE p∘⟨⟩ #-}
+
+postulate
+  var₀[⟨⟩] : {Γ Δ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)}
+           → (var₀ {Γ} {A} [ ⟨ σ , t ⟩ ]tm) ≡ t
+
+  ⟨⟩∘ : {Γ Δ Θ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)} {τ : Sub Θ Δ}
+        → (⟨_,_⟩ {Γ} {Δ} {A} σ t) ∘ τ ≡ ⟨ σ ∘ τ , (t [ τ ]tm)⟩
+
+  ⟨p,var₀⟩ : {Γ : Ctx} {A : Ty Γ}
+           → ⟨ p , var₀ ⟩ ≡ id {Γ , A}
+
+{-# REWRITE var₀[⟨⟩] #-}
+{-# REWRITE ⟨⟩∘ #-}
+{-# REWRITE ⟨p,var₀⟩ #-}
+
+example : {Γ : Ctx} {A : Ty Γ} → Tm Γ A → Tm Γ A
+example t = t [ id ]tm
+
+test1 : {Γ : Ctx} {A : Ty Γ} → (A [ id ]ty) ≡ A
+test1 = refl
+
+test2 : {Γ Δ Θ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {τ : Sub Θ Δ}
+      → ((A [ σ ]ty) [ τ ]ty) ≡ (A [ σ ∘ τ ]ty)
+test2 = refl
+
+test3 : {Γ Δ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)}
+      → (var₀ {Γ} {A} [ ⟨ σ , t ⟩ ]tm) ≡ t
+test3 = refl
 
 ```
-
--- ```agda
--- mutual
---   -- Positive dependency for terms: x ∈ Var(t:A)
---   data _∈Var-term_ : {Γ : Ctx} {A : Ty Γ} → Var Γ → Tm Γ A → Set where
---     -- VAR-SELF: x ∈ Var(x)
---     var-self : {Γ : Ctx} → (x : Var Γ)
---              → x ∈Var-term (var Γ x)
-  
---     -- VARDEP-TERM-WEAKEN: if x ∈ Var(t) in Γ, then x ∈ Var(t) in Γ.B
---     vardep-term-weaken : {Γ : Ctx} {A B : Ty Γ} {t : Tm Γ A}
---                        → (x : Var Γ) → x ∈Var-term t
---                        → (weak Γ B x) ∈Var-term (weaken-tm B t)
-  
---     -- VARDEP-FROM-TYPE: if x ∈ Var(A), then x ∈ Var(t) for any t:A
---     vardep-from-type : {Γ : Ctx} {A : Ty Γ}
---                      → (x : Var Γ) → (t : Tm Γ A)
---                      → x ∈Var-type A
---                      → x ∈Var-term t
-  
---     -- VARDEP-SUBST: dependency through substitution
---     -- If x ∈ Var(t) in Γ, σ : Δ → Γ, and y ∈ Var(σ(x)), then y ∈ Var(t[σ])
---     vardep-subst : {Γ Δ : Ctx} {A : Ty Γ}
---                  → (x : Var Γ) → (t : Tm Γ A)
---                  → (σ : Sub Δ Γ)
---                  → (y : Var Δ)
---                  → x ∈Var-term t
---                  → y ∈Var-term (apply-sub-to-var σ x)
---                  → y ∈Var-term (t [ σ ]tm)
-  
---   -- Positive dependency for types: x ∈ Var(A)
---   data _∈Var-type_ : {Γ : Ctx} → Var Γ → Ty Γ → Set where
---     -- VARDEP-TYPE-WEAKEN: if x ∈ Var(A) in Γ, then x ∈ Var(A) in Γ.B
---     vardep-type-weaken : {Γ : Ctx} {A B : Ty Γ}
---                        → (x : Var Γ) → x ∈Var-type A
---                        → (weak Γ B x) ∈Var-type (weaken-ty B A)
-  
---     -- VARDEP-HOM-SRC: if x ∈ Var(t), then x ∈ Var([A] t ⇒ u)
---     vardep-hom-src : {Γ : Ctx} {A : Ty Γ} {t u : Tm Γ A}
---                    → (x : Var Γ) → x ∈Var-term t
---                    → x ∈Var-type ([ A ] t ⇒ u)
-  
---     -- VARDEP-HOM-TGT: if x ∈ Var(u), then x ∈ Var([A] t ⇒ u)
---     vardep-hom-tgt : {Γ : Ctx} {A : Ty Γ} {t u : Tm Γ A}
---                    → (x : Var Γ) → x ∈Var-term u
---                    → x ∈Var-type ([ A ] t ⇒ u)
-  
---     -- VARDEP-HOM-BASE: if x ∈ Var(A), then x ∈ Var([A] t ⇒ u)
---     vardep-hom-base : {Γ : Ctx} {A : Ty Γ} {t u : Tm Γ A}
---                     → (x : Var Γ) → x ∈Var-type A
---                     → x ∈Var-type ([ A ] t ⇒ u)
-  
---   -- Helper: apply substitution to a variable (returns the term σ(x))
---   postulate
---     apply-sub-to-var : {Γ Δ : Ctx} → Sub Δ Γ → Var Γ → Tm Δ {! type !}
---     weaken-ty : {Γ : Ctx} → (B : Ty Γ) → Ty Γ → Ty (Γ . B)
---    
