@@ -6,6 +6,7 @@ module V2.intrinsic-syntax where
 open import Agda.Builtin.Equality
 open import Agda.Builtin.Equality.Rewrite
 open import Data.Bool.Base
+open import Data.Bool.Properties
 
 mutual
 
@@ -110,30 +111,53 @@ test3 : {Γ Δ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)}
       → (var₀ {A = A} [ ⟨ σ , t ⟩ ]tm) ≡ t
 test3 = refl
 
-data Var : (Γ : Ctx) → Ty Γ → Set where
-  vz : {Γ : Ctx} {A : Ty Γ} → Var (Γ , A) (A [ p ]ty)
-  vs : {Γ : Ctx} {A B : Ty Γ} → Var Γ A → Var (Γ , B) (A [ p ]ty)
+data Var : Ctx → Set where
+    intro : (Γ : Ctx) → (A : Ty Γ) → Var (Γ , A)
+    weak  : (Γ : Ctx) → (A : Ty Γ) → Var Γ → Var (Γ , A)
 
-ΣVar : (Γ : Ctx) → Set
-ΣVar = {!   !}
+var-to-type : {Γ : Ctx} → Var Γ → Ty Γ
+var-to-type (intro Γ A) = A [ p ]ty
+var-to-type (weak Γ A x) = (var-to-type x) [ p ]ty
 
-var : {Γ : Ctx} {A : Ty Γ} → Var Γ A → Tm Γ A
-var vz = var₀
-var (vs x) = (var x) [ p ]tm
+var : {Γ : Ctx} → (x : Var Γ) → Tm Γ (var-to-type x)
+var (intro Γ A) = var₀
+var (weak Γ A x) = (var x) [ p ]tm
 
-lookup : {Γ Δ : Ctx} {A : Ty Γ} → Var Γ A → (σ : Sub Δ Γ) → Tm Δ (A [ σ ]ty)
-lookup x σ = var x [ σ ]tm
+lookup : {Γ Δ : Ctx} → (x : Var Γ) → (σ : Sub Δ Γ) → Tm Δ ((var-to-type x) [ σ ]ty)
+lookup x σ = (var x) [ σ ]tm
 
-var-lookup : {Γ Δ : Ctx} {A : Ty Γ} (x : Var Γ A) (σ : Sub Δ Γ)
+var-lookup : {Γ Δ : Ctx} (x : Var Γ) (σ : Sub Δ Γ)
              → (var x [ σ ]tm) ≡ lookup x σ
 var-lookup x σ = refl
 
-lookup-vz : {Γ Δ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)}
-          → lookup {A = A [ p ]ty} vz (⟨_,_⟩ {A = A} σ t) ≡ t
-lookup-vz = refl
+lookup-intro : {Γ Δ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)}
+          → lookup (intro Γ A) (⟨_,_⟩ {A = A} σ t) ≡ t
+lookup-intro = refl
 
-lookup-vs : {Γ Δ : Ctx} {A B : Ty Γ} {x : Var Γ A} {σ : Sub Δ Γ} {t : Tm Δ (B [ σ ]ty)}
-          → lookup (vs x) (⟨_,_⟩ {A = B} σ t) ≡ lookup x σ
-lookup-vs = refl
+lookup-weak : {Γ Δ : Ctx} {A B : Ty Γ} {x : Var Γ} {σ : Sub Δ Γ} {t : Tm Δ (B [ σ ]ty)}
+          → lookup (weak Γ B x) (⟨_,_⟩ {A = B} σ t) ≡ lookup x σ
+lookup-weak = refl
 
+∃-var : (Γ : Ctx) → ((x : Var Γ) → Bool) → Bool
+∃-var ∅ f = false
+∃-var (Γ , A) f = (f (intro Γ A)) ∨ (∃-var Γ (λ x → f (weak _ _ x)))
+
+∀-var : (Γ : Ctx) → ((x : Var Γ) → Bool) → Bool
+∀-var ∅ f = true
+∀-var (Γ , A) f = (f (intro Γ A)) ∧ (∀-var Γ (λ x → f (weak _ _ x)))
+
+mutual
+  depends-on-var-type : {Γ : Ctx} → Var Γ → Ty Γ → Bool
+  depends-on-var-type x Ob = false
+  depends-on-var-type x ([ A ] t ⇒ u) =
+    depends-on-var-term x t ∨ depends-on-var-type x A ∨ depends-on-var-term x u
+  depends-on-var-type x (_[_]ty {Γ = Δ} A σ) =
+    ∃-var Δ (λ y → (depends-on-var-term x ((var y) [ σ ]tm)) ∧ (depends-on-var-type y A))
+
+  {-# TERMINATING #-}
+  depends-on-var-term : {Γ : Ctx} {A : Ty Γ} → Var Γ → Tm Γ A → Bool
+  depends-on-var-term (intro _ _) var₀ = true
+  depends-on-var-term (weak _ _ x) var₀ = false
+  depends-on-var-term x (_[_]tm {Γ = Δ} t σ) =
+    ∃-var Δ (λ y → (depends-on-var-term x ((var y) [ σ ]tm)) ∧ (depends-on-var-term y t))
 ```
