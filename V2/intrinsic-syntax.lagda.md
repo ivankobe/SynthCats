@@ -5,6 +5,7 @@ module V2.intrinsic-syntax where
 
 open import Agda.Builtin.Equality
 open import Agda.Builtin.Equality.Rewrite
+open import Data.Bool.Base
 
 mutual
 
@@ -86,7 +87,7 @@ postulate
            → (var₀ {Γ} {A} [ ⟨ σ , t ⟩ ]tm) ≡ t
 
   ⟨⟩∘ : {Γ Δ Θ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)} {τ : Sub Θ Δ}
-        → (⟨_,_⟩ {Γ} {Δ} {A} σ t) ∘ τ ≡ ⟨ σ ∘ τ , (t [ τ ]tm)⟩
+        → (⟨_,_⟩ {A = A} σ t) ∘ τ ≡ ⟨ σ ∘ τ , (t [ τ ]tm)⟩
 
   ⟨p,var₀⟩ : {Γ : Ctx} {A : Ty Γ}
            → ⟨ p , var₀ ⟩ ≡ id {Γ , A}
@@ -106,7 +107,33 @@ test2 : {Γ Δ Θ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {τ : Sub Θ Δ}
 test2 = refl
 
 test3 : {Γ Δ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)}
-      → (var₀ {Γ} {A} [ ⟨ σ , t ⟩ ]tm) ≡ t
+      → (var₀ {A = A} [ ⟨ σ , t ⟩ ]tm) ≡ t
 test3 = refl
+
+data Var : (Γ : Ctx) → Ty Γ → Set where
+  vz : {Γ : Ctx} {A : Ty Γ} → Var (Γ , A) (A [ p ]ty)
+  vs : {Γ : Ctx} {A B : Ty Γ} → Var Γ A → Var (Γ , B) (A [ p ]ty)
+
+ΣVar : (Γ : Ctx) → Set
+ΣVar = {!   !}
+
+var : {Γ : Ctx} {A : Ty Γ} → Var Γ A → Tm Γ A
+var vz = var₀
+var (vs x) = (var x) [ p ]tm
+
+lookup : {Γ Δ : Ctx} {A : Ty Γ} → Var Γ A → (σ : Sub Δ Γ) → Tm Δ (A [ σ ]ty)
+lookup x σ = var x [ σ ]tm
+
+var-lookup : {Γ Δ : Ctx} {A : Ty Γ} (x : Var Γ A) (σ : Sub Δ Γ)
+             → (var x [ σ ]tm) ≡ lookup x σ
+var-lookup x σ = refl
+
+lookup-vz : {Γ Δ : Ctx} {A : Ty Γ} {σ : Sub Δ Γ} {t : Tm Δ (A [ σ ]ty)}
+          → lookup {A = A [ p ]ty} vz (⟨_,_⟩ {A = A} σ t) ≡ t
+lookup-vz = refl
+
+lookup-vs : {Γ Δ : Ctx} {A B : Ty Γ} {x : Var Γ A} {σ : Sub Δ Γ} {t : Tm Δ (B [ σ ]ty)}
+          → lookup (vs x) (⟨_,_⟩ {A = B} σ t) ≡ lookup x σ
+lookup-vs = refl
 
 ```
