@@ -3,6 +3,7 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
 open import CaTT.CaTT
+open import CaTT.coherences
 open import CaTT.commutative-squares-pasting
 open import CaTT.type-morphisms
 open import CaTT.whiskering
@@ -156,6 +157,29 @@ pb-is-pb f g = record {
   coh₂ = coh₂-pb ;
   coh₃ = coh₃-pb }
 ```
+
+```agda
+module _
+  {C D E : cat} {f : fun C E} {g : fun D E}
+  where
+
+  flip-cone : cone g f → cone f g
+  flip-cone c = record {
+    cone-apex = cone-apex c ;
+    cone-fst = cone-snd c ;
+    cone-snd = cone-fst c ;
+    cone-coh = Inv (cone-coh c) }
+
+  pb-is-symm : is-pb {f = f} {g} (flip-cone (pb g f))
+  pb-is-symm = record {
+    pair = λ A p t₁ t₂ σ → pair-pb {f = g} {f} A p t₂ t₁ {!  coh-pb-ty (pb g f) p t₂ t₁ !} ;
+    coh₁ = {!   !} ;
+    coh₂ = {!   !} ;
+    coh₃ = {!   !} }
+
+```
+
+
 
 The datatype of cone diagrams, of isos of cone diagrams, and of isos of those isos.
 
